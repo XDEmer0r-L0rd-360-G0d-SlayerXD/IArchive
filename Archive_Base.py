@@ -66,6 +66,8 @@ class SetupContainer:
             print('user:', self.user_box.get())
             with open(f'{self.user_box.get()}_key.txt') as f:
                 self.login_cookie = f.read()
+            self.auth_label.config(text='Key Found')
+            print(self.login_cookie)
         except FileNotFoundError:
             def get_enter_val():
                 pass_value = pass_box.get()
