@@ -6,8 +6,10 @@ import selenium
 
 class SetupContainer:
     def __init__(self):
+
+        self.login_cookie = ''
+
         def on_entry_click(event):
-            """function that gets called whenever self.user_box is clicked"""
             if self.user_box.get() == 'Enter Username':
                 self.user_box.delete(0, "end")  # delete all the text in the self.user_box
                 self.user_box.insert(0, '')  # Insert blank for user input
@@ -59,12 +61,28 @@ class SetupContainer:
             self.auth_button.forget()
 
     def auth_check(self):
+        self.auth_button.forget()
         try:
-            with open(f'{self.user_box}_key.txt') as f:
-                login_cookie = f.read()
+            print('user:', self.user_box.get())
+            with open(f'{self.user_box.get()}_key.txt') as f:
+                self.login_cookie = f.read()
         except FileNotFoundError:
+            def get_enter_val():
+                pass_value = pass_box.get()
+                self.auth_label.config(text=pass_value)
 
-            self.auth_label.config(text='checked')
+            def on_entry_click(event):
+                if pass_box.get() == 'Password needed':
+                    pass_box.delete(0, "end")  # delete all the text in the self.user_box
+                    pass_box.insert(0, '')  # Insert blank for user input
+                    pass_box.config(fg='black')
+            pass_value = ''
+            pass_box = Entry(self.grab_smiles_frame)
+            pass_box.insert(0, 'Password needed')
+            pass_box.bind('<FocusIn>', on_entry_click)
+            pass_button = Button(self.grab_smiles_frame, text='Enter Password', command=get_enter_val)
+            pass_box.pack()
+            pass_button.pack()
 
     def done(self):
         # function gets called twice, by button and by box.done() outside
