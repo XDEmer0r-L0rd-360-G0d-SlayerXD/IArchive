@@ -25,6 +25,8 @@ class SetupContainer:
         self.want_posts = IntVar()
         self.want_repubs = IntVar()
         self.want_smiled = IntVar()
+        self.folder_for_posts = IntVar()
+        self.post_per_folder = IntVar()
         self.user_box = Entry(self.root)
         self.user_box.insert(0, 'Enter Username')
         self.user_box.bind('<FocusIn>', on_entry_click)
@@ -34,10 +36,14 @@ class SetupContainer:
         smile_check = Checkbutton(self.grab_smiles_frame, text='Grab Smiled Posts', variable=self.want_smiled, command=self.check_auth_frame)
         self.auth_label = Label(self.grab_smiles_frame, text='Authentication Unconfirmed')
         self.auth_button = Button(self.grab_smiles_frame, text='Test Authentication', command=self.auth_check)
+        save_post_check = Checkbutton(self.root, text='Save all posts in folder', variable=self.folder_for_posts)
+        save_posts_data_check = Checkbutton(self.root, text='Save additional data per post', variable=self.post_per_folder)
         self.user_box.pack()
         self.grab_posts_frame.pack()
         post_check.pack()
         self.grab_smiles_frame.pack()
+        save_post_check.pack()
+        save_posts_data_check.pack()
         smile_check.pack()
         but.pack()
 
@@ -68,16 +74,12 @@ class SetupContainer:
                 self.login_cookie = f.read()
             self.auth_label.config(text='Key Found, Checking Validity')
             self.test_key()
-            print(self.login_cookie)
         except FileNotFoundError:
             def get_enter_val():
                 pass_value = pass_box.get()
                 email_value = email_box.get()
-                print('cred', email_value, pass_value)
                 self.auth_label.config(text=pass_value)
                 self.login_cookie = self.get_cookies(email_value, pass_value)
-
-
 
             def on_entry_click_pass(event):
                 if pass_box.get() == 'Password needed':
@@ -135,16 +137,16 @@ class SetupContainer:
         else:
             self.auth_label.config(text='Key Works')
 
+    def grab(self):
+        return self.user_box.get(), self.want_posts.get(), self.want_repubs.get(), self.want_smiled.get(), self.login_cookie, self.folder_for_posts.get(), self.post_per_folder.get()
+
     def done(self):
-        # function gets called twice, by button and by box.done() outside
-        print('want', self.want_repubs.get())
         self.root.quit()
-        return 2
 
 
 def pre_setup():
     box = SetupContainer()
-    values = box.done()
+    values = box.grab()
     print('val:', values)
     return 0
 
