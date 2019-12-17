@@ -1,6 +1,8 @@
 from tkinter import *
 import requests
 import os
+import lxml
+from pprint import pprint
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
@@ -64,7 +66,8 @@ class SetupContainer:
             print('user:', self.user_box.get())
             with open(f'{self.user_box.get()}_key.txt', 'r') as f:
                 self.login_cookie = f.read()
-            self.auth_label.config(text='Key Found')
+            self.auth_label.config(text='Key Found, Checking Validity')
+            self.test_key()
             print(self.login_cookie)
         except FileNotFoundError:
             def get_enter_val():
@@ -73,6 +76,8 @@ class SetupContainer:
                 print('cred', email_value, pass_value)
                 self.auth_label.config(text=pass_value)
                 self.login_cookie = self.get_cookies(email_value, pass_value)
+
+
 
             def on_entry_click_pass(event):
                 if pass_box.get() == 'Password needed':
@@ -99,8 +104,9 @@ class SetupContainer:
             pass_button.pack()
 
     def get_cookies(self, email, password):
-        # options = webdriver.FirefoxOptions()
-        driver = webdriver.Firefox()
+        options = webdriver.FirefoxOptions()
+        options.add_argument('-headless')
+        driver = webdriver.Firefox(options=options)
         driver.get('https://ifunny.co')
         target = driver.find_element_by_xpath('/html/body/div[1]/div[2]/div[1]/header/div[3]/ul[2]/li[2]/a')
         target.click()
@@ -115,7 +121,19 @@ class SetupContainer:
         print('raw', raw_cookie)
         with open(f'{self.user_box.get()}_key.txt', 'w') as f:
             f.write(raw_cookie['value'])
+        self.auth_label.config(text='Generated Key')
         return raw_cookie['value']
+
+    def test_key(self):
+        cookie_form = {'UID': self.login_cookie}
+        response = requests.get(f'https://ifunny.co/user/{self.user_box.get()}', cookies=cookie_form)
+        print('status:', response.status_code)
+        if response.status_code == 404:
+            os.remove(f'{self.user_box}_key.txt')
+            self.auth_label.config(text='Key Failed')
+            self.auth_check()
+        else:
+            self.auth_label.config(text='Key Works')
 
     def done(self):
         # function gets called twice, by button and by box.done() outside
