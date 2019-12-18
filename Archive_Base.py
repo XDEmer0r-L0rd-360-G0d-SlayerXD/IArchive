@@ -4,6 +4,7 @@ import os
 import lxml
 from pprint import pprint
 from selenium import webdriver
+import time
 
 
 class SetupContainer:
@@ -80,7 +81,7 @@ class SetupContainer:
             def get_enter_val():
                 pass_value = pass_box.get()
                 email_value = email_box.get()
-                self.auth_label.config(text=pass_value)
+                self.auth_label.config(text='Generating Key')
                 print('creds:', email_value, pass_value)
                 self.login_cookie = self.get_cookies(email_value, pass_value)
 
@@ -110,7 +111,7 @@ class SetupContainer:
 
     def get_cookies(self, email, password):
         options = webdriver.FirefoxOptions()
-        options.add_argument('-headless')
+        # options.add_argument('-headless')
         driver = webdriver.Firefox(options=options)
         driver.get('https://ifunny.co')
         target = driver.find_element_by_xpath('/html/body/div[1]/div[2]/div[1]/header/div[3]/ul[2]/li[2]/a')
@@ -122,10 +123,15 @@ class SetupContainer:
         target = driver.find_element_by_xpath('/html/body/div[1]/div[3]/div/div[1]/section/form/button[1]')
         target.click()
         raw_cookie = driver.get_cookie('UID')
-        driver.quit()
-        print('raw', type(raw_cookie))
         if raw_cookie is None:
             self.auth_label.config(text='Invalid Login')
+            given = input('check if human is needed(y to click again)>')
+            if given == 'y':
+                target.click()
+                time.sleep(1)
+                raw_cookie = driver.get_cookie('UID')
+        driver.quit()
+        print('raw', type(raw_cookie))
         with open(f'{self.user_box.get()}_key.txt', 'w') as f:
             f.write(raw_cookie['value'])
         self.auth_label.config(text='Generated Key')
