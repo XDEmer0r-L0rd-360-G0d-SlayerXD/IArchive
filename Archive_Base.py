@@ -4,7 +4,6 @@ import os
 import lxml
 from pprint import pprint
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
 
 
 class SetupContainer:
@@ -79,6 +78,7 @@ class SetupContainer:
                 pass_value = pass_box.get()
                 email_value = email_box.get()
                 self.auth_label.config(text=pass_value)
+                print('creds:', email_value, pass_value)
                 self.login_cookie = self.get_cookies(email_value, pass_value)
 
             def on_entry_click_pass(event):
@@ -142,11 +142,22 @@ class SetupContainer:
 
     def done(self):
         self.root.quit()
+    
+    def destroy(self):
+        self.root.destroy()
 
 
 def pre_setup():
     box = SetupContainer()
-    values = box.grab()
+    try:
+        values = box.grab()
+    except Exception:
+        input('Program Terminated')
+        exit()
+    box.destroy()
+    if values[0].__contains__(' ') or (values[1] == 0 and values[3] == 0) or (values[5] == 0 and values[6] == 0):
+        input('Invalid Setup')
+        exit()
     print('val:', values)
     return 0
 
