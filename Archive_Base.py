@@ -71,6 +71,9 @@ class SetupContainer:
             print('user:', self.user_box.get())
             with open(f'{self.user_box.get()}_key.txt', 'r') as f:
                 self.login_cookie = f.read()
+            if self.login_cookie == '':
+                os.remove(f'{self.user_box}_key.txt')
+                self.auth_check()
             self.auth_label.config(text='Key Found, Checking Validity')
             self.test_key()
         except FileNotFoundError:
@@ -120,7 +123,9 @@ class SetupContainer:
         target.click()
         raw_cookie = driver.get_cookie('UID')
         driver.quit()
-        print('raw', raw_cookie)
+        print('raw', type(raw_cookie))
+        if raw_cookie is None:
+            self.auth_label.config(text='Invalid Login')
         with open(f'{self.user_box.get()}_key.txt', 'w') as f:
             f.write(raw_cookie['value'])
         self.auth_label.config(text='Generated Key')
@@ -155,15 +160,51 @@ def pre_setup():
         input('Program Terminated')
         exit()
     box.destroy()
-    if values[0].__contains__(' ') or (values[1] == 0 and values[3] == 0) or (values[5] == 0 and values[6] == 0):
+    if values[0].__contains__(' ') or values[0] == '' or (values[1] == 0 and values[3] == 0) or (values[5] == 0 and values[6] == 0):
         input('Invalid Setup')
         exit()
     print('val:', values)
-    return 0
+    return values
+
+
+def prep_user_files(user, want_posts, want_smiles, want_dump, want_data):
+    if not os.path.isdir(user):
+        os.mkdir(user)
+    os.chdir(user)
+    if not os.path.isfile('saved_posts_dump.txt') and want_posts == 1 and want_dump == 1:
+        with open('saved_posts_dump.txt', 'w') as f:
+            f.write('')
+    if not os.path.isfile('saved_smiles_dump.txt') and want_smiles == 1 and want_dump == 1:
+        with open('saved_smiles_dump.txt', 'w') as f:
+            f.write('')
+    if not os.path.isfile('saved_posts_data.txt') and want_posts == 1 and want_data == 1:
+        with open('saved_posts_data.txt', 'w') as f:
+            f.write('')
+    if not os.path.isfile('saved_smiles_data.txt') and want_smiles == 1 and want_data == 1:
+        with open('saved_smiles_data.txt', 'w') as f:
+            f.write('')
+    if not os.path.isdir('post_dump') and want_posts == 1 and want_dump == 1:
+        os.mkdir('post_dump')
+    if not os.path.isdir('smile_dump') and want_smiles == 1 and want_dump == 1:
+        os.mkdir('smile_dump')
+    if not os.path.isdir('post_data') and want_posts == 1 and want_data == 1:
+        os.mkdir('post_data')
+    if not os.path.isdir('smile_data') and want_smiles == 1 and want_data == 1:
+        os.mkdir('smile_data')
+
+
+def grab_post_urls(user, want_reposts):
+    print(os.getcwd())
+    bank = set()
+    xpath = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[1]/div/div/a'
+    xpatt = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[2]/div/div/a'
 
 
 def main():
-    values = pre_setup()
+    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data = pre_setup()
+    prep_user_files(user, want_posts, want_smiles, want_dump, want_data)
+    exit()
+    grab_post_urls('namisboss', 0)
     print('teast')
 
 
