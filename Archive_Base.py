@@ -27,6 +27,7 @@ class SetupContainer:
         self.want_smiled = IntVar()
         self.folder_for_posts = IntVar()
         self.post_per_folder = IntVar()
+        self.fast_mode = IntVar()
         self.user_box = Entry(self.root)
         self.user_box.insert(0, 'Enter Username')
         self.user_box.bind('<FocusIn>', on_entry_click)
@@ -38,6 +39,7 @@ class SetupContainer:
         self.auth_button = Button(self.grab_smiles_frame, text='Test Authentication', command=self.auth_check)
         save_post_check = Checkbutton(self.root, text='Save all posts in folder', variable=self.folder_for_posts)
         save_posts_data_check = Checkbutton(self.root, text='Save additional data per post', variable=self.post_per_folder)
+        fast_mode_check = Checkbutton(self.root, text='Fast Update Mode (may miss some posts)', variable=self.fast_mode)
         self.user_box.pack()
         self.grab_posts_frame.pack()
         post_check.pack()
@@ -45,6 +47,7 @@ class SetupContainer:
         save_post_check.pack()
         save_posts_data_check.pack()
         smile_check.pack()
+        fast_mode_check.pack()
         but.pack()
 
         self.root.mainloop()
@@ -149,7 +152,7 @@ class SetupContainer:
             self.auth_label.config(text='Key Works')
 
     def grab(self):
-        return self.user_box.get(), self.want_posts.get(), self.want_repubs.get(), self.want_smiled.get(), self.login_cookie, self.folder_for_posts.get(), self.post_per_folder.get()
+        return self.user_box.get(), self.want_posts.get(), self.want_repubs.get(), self.want_smiled.get(), self.login_cookie, self.folder_for_posts.get(), self.post_per_folder.get(), self.fast_mode.get()
 
     def done(self):
         self.root.quit()
@@ -233,7 +236,7 @@ def main():
     my_token = 'c00b9bdc7d3fc37bc313b98c3396ac2dc91a78d93f80a1d6f486532c3e29cd2d'
     grab_post_urls(blast, 0, '')
     exit()
-    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data = pre_setup()
+    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = pre_setup()
     prep_user_files(user, want_posts, want_smiles, want_dump, want_data)
     print('teast')
 
