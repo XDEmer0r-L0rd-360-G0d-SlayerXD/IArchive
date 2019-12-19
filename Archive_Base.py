@@ -180,18 +180,6 @@ def prep_user_files(user):
     if not os.path.isdir(user):
         os.mkdir(user)
     os.chdir(user)
-    if not os.path.isfile('saved_posts_dump.txt'):
-        with open('saved_posts_dump.txt', 'w') as f:
-            f.write('')
-    if not os.path.isfile('saved_smiles_dump.txt'):
-        with open('saved_smiles_dump.txt', 'w') as f:
-            f.write('')
-    if not os.path.isfile('saved_posts_data.txt'):
-        with open('saved_posts_data.txt', 'w') as f:
-            f.write('')
-    if not os.path.isfile('saved_smiles_data.txt'):
-        with open('saved_smiles_data.txt', 'w') as f:
-            f.write('')
     if not os.path.isdir('post_dump'):
         os.mkdir('post_dump')
     if not os.path.isdir('smile_dump'):
@@ -200,6 +188,26 @@ def prep_user_files(user):
         os.mkdir('post_data')
     if not os.path.isdir('smile_data'):
         os.mkdir('smile_data')
+    os.chdir('post_dump')
+    if not os.path.isfile('saved_posts_dump.txt'):
+        with open('saved_posts_dump.txt', 'w') as f:
+            f.write('')
+    os.chdir('..')
+    os.chdir('smile_dump')
+    if not os.path.isfile('saved_smiles_dump.txt'):
+        with open('saved_smiles_dump.txt', 'w') as f:
+            f.write('')
+    os.chdir('..')
+    os.chdir('post_data')
+    if not os.path.isfile('saved_posts_data.txt'):
+        with open('saved_posts_data.txt', 'w') as f:
+            f.write('')
+    os.chdir('..')
+    os.chdir('smile_data')
+    if not os.path.isfile('saved_smiles_data.txt'):
+        with open('saved_smiles_data.txt', 'w') as f:
+            f.write('')
+    os.chdir('..')
 
 
 def grab_post_urls(start_url, exclude_reposts, token, short_scan=0, already_saved=set()):
@@ -244,14 +252,22 @@ def grab_post_urls(start_url, exclude_reposts, token, short_scan=0, already_save
 
 def grab_archived(user):
     os.chdir(user)
+    os.chdir('post_data')
     with open('saved_posts_data.txt', 'r') as f:
         post_data_links = set(f.read().split('\n'))
+    os.chdir('..')
+    os.chdir('post_dump')
     with open('saved_posts_dump.txt', 'r') as f:
         post_dump_links = set(f.read().split('\n'))
+    os.chdir('..')
+    os.chdir('smile_data')
     with open('saved_smiles_data.txt', 'r') as f:
         smile_data_links = set(f.read().split('\n'))
+    os.chdir('..')
+    os.chdir('smile_dump')
     with open('saved_smiles_dump.txt', 'r') as f:
         smile_dump_links = set(f.read().split('\n'))
+    os.chdir('..')
     return post_data_links, post_dump_links, smile_data_links, smile_dump_links
 
 
