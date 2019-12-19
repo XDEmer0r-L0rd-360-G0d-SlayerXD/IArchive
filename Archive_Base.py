@@ -202,11 +202,12 @@ def prep_user_files(user):
         os.mkdir('smile_data')
 
 
-def grab_post_urls(start_url, exclude_reposts, token):
+def grab_post_urls(start_url, exclude_reposts, token, short_scan=0, already_saved=set()):
     cookie_form = {'UID': token}
     next_url = start_url
     bank = set()
     count = 0
+    overlaps = 0
     while True:
         if count == 20:
             break
@@ -222,8 +223,14 @@ def grab_post_urls(start_url, exclude_reposts, token):
                 exclude = tree.xpath(path)
                 print('exclude', exclude)
             if not exclude:
-                cleaned_grab.append(a.split('?')[0])
-        print(cleaned_grab)
+                cur_link = a.split('?')[0]
+                if cur_link not in already_saved:
+                    cleaned_grab.append(cur_link)
+                else:
+                    if short_scan == 1:
+                        overlaps += 1
+                        if overlaps == 5:
+                            return bank
         bank.update(cleaned_grab)
         print(bank)
         try:
