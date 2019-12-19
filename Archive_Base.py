@@ -176,29 +176,29 @@ def pre_setup():
     return values
 
 
-def prep_user_files(user, want_posts, want_smiles, want_dump, want_data):
+def prep_user_files(user):
     if not os.path.isdir(user):
         os.mkdir(user)
     os.chdir(user)
-    if not os.path.isfile('saved_posts_dump.txt') and want_posts == 1 and want_dump == 1:
+    if not os.path.isfile('saved_posts_dump.txt'):
         with open('saved_posts_dump.txt', 'w') as f:
             f.write('')
-    if not os.path.isfile('saved_smiles_dump.txt') and want_smiles == 1 and want_dump == 1:
+    if not os.path.isfile('saved_smiles_dump.txt'):
         with open('saved_smiles_dump.txt', 'w') as f:
             f.write('')
-    if not os.path.isfile('saved_posts_data.txt') and want_posts == 1 and want_data == 1:
+    if not os.path.isfile('saved_posts_data.txt'):
         with open('saved_posts_data.txt', 'w') as f:
             f.write('')
-    if not os.path.isfile('saved_smiles_data.txt') and want_smiles == 1 and want_data == 1:
+    if not os.path.isfile('saved_smiles_data.txt'):
         with open('saved_smiles_data.txt', 'w') as f:
             f.write('')
-    if not os.path.isdir('post_dump') and want_posts == 1 and want_dump == 1:
+    if not os.path.isdir('post_dump'):
         os.mkdir('post_dump')
-    if not os.path.isdir('smile_dump') and want_smiles == 1 and want_dump == 1:
+    if not os.path.isdir('smile_dump'):
         os.mkdir('smile_dump')
-    if not os.path.isdir('post_data') and want_posts == 1 and want_data == 1:
+    if not os.path.isdir('post_data'):
         os.mkdir('post_data')
-    if not os.path.isdir('smile_data') and want_smiles == 1 and want_data == 1:
+    if not os.path.isdir('smile_data'):
         os.mkdir('smile_data')
 
 
@@ -235,7 +235,21 @@ def grab_post_urls(start_url, exclude_reposts, token):
     return bank
 
 
+def grab_archived(user):
+    os.chdir(user)
+    with open('saved_posts_data.txt', 'r') as f:
+        post_data_links = set(f.read().split('\n'))
+    with open('saved_posts_dump.txt', 'r') as f:
+        post_dump_links = set(f.read().split('\n'))
+    with open('saved_smiles_data.txt', 'r') as f:
+        smile_data_links = set(f.read().split('\n'))
+    with open('saved_smiles_dump.txt', 'r') as f:
+        smile_dump_links = set(f.read().split('\n'))
+    return post_data_links, post_dump_links, smile_data_links, smile_dump_links
+
+
 def main():
+    # order: pre_setup(), prep_user_files, grab_archived
     me = 'https://ifunny.co/user/namisboss'
     blast = 'https://ifunny.co/user/Gone_With_The_Blastwave'
     smiles = 'https://ifunny.co/account/smiles'
