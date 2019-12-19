@@ -161,7 +161,7 @@ class SetupContainer:
         self.root.destroy()
 
 
-def pre_setup():
+def setup():
     box = SetupContainer()
     try:
         values = box.grab()
@@ -210,14 +210,15 @@ def prep_user_files(user):
     os.chdir('..')
 
 
-def grab_post_urls(start_url, exclude_reposts, token, short_scan=0, already_saved=set()):
+def grab_post_urls(start_url, exclude_repubs=0, token='', short_scan=0, already_saved=set()):
     cookie_form = {'UID': token}
     next_url = start_url
     bank = set()
     count = 0
     overlaps = 0
     while True:
-        if count == 20:
+        print(count)
+        if count == 200:
             break
         count += 1
         response = requests.get(next_url, cookies=cookie_form)
@@ -226,7 +227,7 @@ def grab_post_urls(start_url, exclude_reposts, token, short_scan=0, already_save
         cleaned_grab = []
         for num_a, a in enumerate(grab):
             exclude = False
-            if exclude_reposts == 1:
+            if exclude_repubs == 1:
                 path = f'/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[{num_a + 1}]/div/div/a/svg/@class="Icon grid__icon grid__icon_bottom"'
                 exclude = tree.xpath(path)
                 print('exclude', exclude)
@@ -246,12 +247,11 @@ def grab_post_urls(start_url, exclude_reposts, token, short_scan=0, already_save
             print(next_url)
         except IndexError:
             break
-    print('done')
+    print('done', len(bank))
     return bank
 
 
-def grab_archived(user):
-    os.chdir(user)
+def grab_archived():
     os.chdir('post_data')
     with open('saved_posts_data.txt', 'r') as f:
         post_data_links = set(f.read().split('\n'))
@@ -273,7 +273,7 @@ def grab_archived(user):
 
 def save_post(url):
     content_type = url.split('/')[1]
-    src_link = ''
+    prep, name = '', ''
     response = requests.get('https://ifunny.co' + url)
     print('content', content_type)
     tree = html.fromstring(response.content)
@@ -287,13 +287,38 @@ def save_post(url):
         grabbed_url = tree.xpath(path)
         name = grabbed_url[0].split('/')[-1]
         prep = grabbed_url[0]
-    else:
-
-        return
 
     downloaded = requests.get(prep)
+    if downloaded.status_code is not 200:
+        return 1
     with open(name, 'wb') as f:
         f.write(downloaded.content)
+    return 0
+
+
+def run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode):
+    prep_user_files(user)
+    post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
+    if want_posts == 1:
+        if fast_mode == 0:
+            post_bank = grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '')
+        if want_data == 1:
+            if fast_mode == 1:
+                post_bank_data = grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', fast_mode, post_data_links)
+        if want_dump == 1:
+            if fast_mode == 1:
+                post_bank_dump = grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', fast_mode, post_dump_links)
+    if want_smiles == 1:
+        if fast_mode == 0:
+            smile_bank = grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token)
+        if want_data == 1:
+            if fast_mode == 1:
+                smile_bank_data = grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, fast_mode, smile_data_links)
+        if want_dump == 1:
+            if fast_mode == 1:
+                smile_bank_dump = grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, fast_mode, smile_dump_links)
+    # all links are in sets, and am currently in user directory
+
     return
 
 
@@ -304,14 +329,16 @@ def main():
     smiles = 'https://ifunny.co/account/smiles'
     my_token = 'c00b9bdc7d3fc37bc313b98c3396ac2dc91a78d93f80a1d6f486532c3e29cd2d'
     user = 'Gone_With_The_Blastwave'
+    stress = 'https://ifunny.co/user/iFurnyAds'
     # save_post('/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
-    prep_user_files(user)
-    all_href = grab_post_urls(blast, 0, '')
+    # prep_user_files(user)
+    all_href = grab_post_urls(stress, 0, '')
+    exit()
     for a in all_href:
         save_post(a)
+    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = setup()
+    run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode)
     exit()
-    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = pre_setup()
-    prep_user_files(user, want_posts, want_smiles, want_dump, want_data)
     print('teast')
 
 
