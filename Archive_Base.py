@@ -1,7 +1,7 @@
 from tkinter import *
 import requests
 import os
-import lxml
+from lxml import html
 from pprint import pprint
 from selenium import webdriver
 import time
@@ -131,7 +131,7 @@ class SetupContainer:
                 time.sleep(1)
                 raw_cookie = driver.get_cookie('UID')
         driver.quit()
-        print('raw', type(raw_cookie))
+        print('raw', raw_cookie)
         with open(f'{self.user_box.get()}_key.txt', 'w') as f:
             f.write(raw_cookie['value'])
         self.auth_label.config(text='Generated Key')
@@ -199,18 +199,42 @@ def prep_user_files(user, want_posts, want_smiles, want_dump, want_data):
         os.mkdir('smile_data')
 
 
-def grab_post_urls(user, want_reposts):
-    print(os.getcwd())
+def grab_post_urls(start_url, exclude_reposts, token):
+    cookie_form = {'UID': token}
+    next_url = start_url
     bank = set()
-    xpath = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[1]/div/div/a'
-    xpatt = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[2]/div/div/a'
+    count = 0
+    while True:
+        if count == 20:
+            break
+        count += 1
+        response = requests.get(next_url, cookies=cookie_form)
+        tree = html.fromstring(response.content)
+        grab = tree.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[*]/div/div/a/@href')
+        cleaned_grab = []
+        for a in grab:
+            cleaned_grab.append(a.split('?')[0])
+        print(cleaned_grab)
+        bank.update(cleaned_grab)
+        print(bank)
+        try:
+            next_url = start_url + ('/timeline/' if token == '' else '/') + tree.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[1]/@data-next')[0]
+            print(next_url)
+        except IndexError:
+            break
+    print('done')
+    return bank
 
 
 def main():
+    me = 'https://ifunny.co/user/namisboss'
+    blast = 'https://ifunny.co/user/Gone_With_The_Blastwave'
+    smiles = 'https://ifunny.co/account/smiles'
+    my_token = 'c00b9bdc7d3fc37bc313b98c3396ac2dc91a78d93f80a1d6f486532c3e29cd2d'
+    grab_post_urls(blast, 0, '')
+    exit()
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data = pre_setup()
     prep_user_files(user, want_posts, want_smiles, want_dump, want_data)
-    exit()
-    grab_post_urls('namisboss', 0)
     print('teast')
 
 
