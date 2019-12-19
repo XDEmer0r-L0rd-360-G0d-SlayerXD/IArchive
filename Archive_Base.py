@@ -277,12 +277,18 @@ def save_post(url):
     response = requests.get('https://ifunny.co' + url)
     print('content', content_type)
     tree = html.fromstring(response.content)
-    if content_type == 'picture':
+    if content_type == 'picture' or content_type == 'meme':
         path = '/html/head/meta[24]/@content'
         grabbed_url = tree.xpath(path)
         name = grabbed_url[0].split('/')[-1]
         prep = 'https://imageproxy.ifunny.co/crop:x-20/images/' + name
+    elif content_type == 'video' or content_type == 'gif':
+        path = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[2]/div/@data-source'
+        grabbed_url = tree.xpath(path)
+        name = grabbed_url[0].split('/')[-1]
+        prep = grabbed_url[0]
     else:
+
         return
 
     downloaded = requests.get(prep)
@@ -297,9 +303,13 @@ def main():
     blast = 'https://ifunny.co/user/Gone_With_The_Blastwave'
     smiles = 'https://ifunny.co/account/smiles'
     my_token = 'c00b9bdc7d3fc37bc313b98c3396ac2dc91a78d93f80a1d6f486532c3e29cd2d'
-    save_post('/picture/HA3awnND7')
+    user = 'Gone_With_The_Blastwave'
+    # save_post('/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
+    prep_user_files(user)
+    all_href = grab_post_urls(blast, 0, '')
+    for a in all_href:
+        save_post(a)
     exit()
-    all_href = grab_post_urls(me, 1, '')
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = pre_setup()
     prep_user_files(user, want_posts, want_smiles, want_dump, want_data)
     print('teast')
