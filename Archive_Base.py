@@ -271,14 +271,35 @@ def grab_archived(user):
     return post_data_links, post_dump_links, smile_data_links, smile_dump_links
 
 
+def save_post(url):
+    content_type = url.split('/')[1]
+    src_link = ''
+    response = requests.get('https://ifunny.co' + url)
+    print('content', content_type)
+    tree = html.fromstring(response.content)
+    if content_type == 'picture':
+        path = '/html/head/meta[24]/@content'
+        grabbed_url = tree.xpath(path)
+        name = grabbed_url[0].split('/')[-1]
+        prep = 'https://imageproxy.ifunny.co/crop:x-20/images/' + name
+    else:
+        return
+
+    downloaded = requests.get(prep)
+    with open(name, 'wb') as f:
+        f.write(downloaded.content)
+    return
+
+
 def main():
     # order: pre_setup(), prep_user_files, grab_archived
     me = 'https://ifunny.co/user/namisboss'
     blast = 'https://ifunny.co/user/Gone_With_The_Blastwave'
     smiles = 'https://ifunny.co/account/smiles'
     my_token = 'c00b9bdc7d3fc37bc313b98c3396ac2dc91a78d93f80a1d6f486532c3e29cd2d'
-    all_href = grab_post_urls(me, 1, '')
+    save_post('/picture/HA3awnND7')
     exit()
+    all_href = grab_post_urls(me, 1, '')
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = pre_setup()
     prep_user_files(user, want_posts, want_smiles, want_dump, want_data)
     print('teast')
