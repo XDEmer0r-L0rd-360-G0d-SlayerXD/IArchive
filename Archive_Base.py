@@ -215,8 +215,14 @@ def grab_post_urls(start_url, exclude_reposts, token):
         tree = html.fromstring(response.content)
         grab = tree.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[*]/div/div/a/@href')
         cleaned_grab = []
-        for a in grab:
-            cleaned_grab.append(a.split('?')[0])
+        for num_a, a in enumerate(grab):
+            exclude = False
+            if exclude_reposts == 1:
+                path = f'/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[{num_a + 1}]/div/div/a/svg/@class="Icon grid__icon grid__icon_bottom"'
+                exclude = tree.xpath(path)
+                print('exclude', exclude)
+            if not exclude:
+                cleaned_grab.append(a.split('?')[0])
         print(cleaned_grab)
         bank.update(cleaned_grab)
         print(bank)
@@ -234,7 +240,7 @@ def main():
     blast = 'https://ifunny.co/user/Gone_With_The_Blastwave'
     smiles = 'https://ifunny.co/account/smiles'
     my_token = 'c00b9bdc7d3fc37bc313b98c3396ac2dc91a78d93f80a1d6f486532c3e29cd2d'
-    grab_post_urls(blast, 0, '')
+    all_href = grab_post_urls(me, 1, '')
     exit()
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = pre_setup()
     prep_user_files(user, want_posts, want_smiles, want_dump, want_data)
