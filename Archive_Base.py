@@ -296,6 +296,16 @@ def save_post(url):
     return 0
 
 
+def generate_comments_file(full_url):
+    base_page = requests.get(full_url)
+    tree = html.fromstring(base_page.content)
+    base_comment_path = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[2]/comments/div/ul/comments-item[*]'
+    comments = tree.xpath(base_comment_path)
+    for a in comments:
+        print(a.xpath('li/@data-replies-count'))
+    print(comments)
+
+
 def run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode):
     prep_user_files(user)
     post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
@@ -332,8 +342,9 @@ def main():
     stress = 'https://ifunny.co/user/iFurnyAds'
     # save_post('/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
     # prep_user_files(user)
-    all_href = grab_post_urls(stress, 0, '')
+    generate_comments_file('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
     exit()
+    all_href = grab_post_urls(stress, 0, '')
     for a in all_href:
         save_post(a)
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = setup()
