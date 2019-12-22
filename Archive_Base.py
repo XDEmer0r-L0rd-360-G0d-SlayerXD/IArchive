@@ -297,13 +297,53 @@ def save_post(url):
 
 
 def generate_comments_file(full_url):
+    base_comment_string = ''
     base_page = requests.get(full_url)
     tree = html.fromstring(base_page.content)
     base_comment_path = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[2]/comments/div/ul/comments-item[*]'
+    replies_template = 'https://ifunny.co/api/content/BZ3pXaE57/comments/5d97f9050d154151511db7a3/replies'
+    first_username_path = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[2]/comments/div/ul/comments-item[1]/li/div[1]/div[2]/div[2]/a'
+    first_date_path = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[2]/comments/div/ul/comments-item[1]/li/div[1]/div[2]/div[2]/span'
+    first_comment_text_path = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[2]/comments/div/ul/comments-item[1]/li/div[1]/div[2]/div[1]/span'
+    first_comment_smiles_path = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[2]/comments/div/ul/comments-item[1]/li/div[1]/div[2]/div[3]/span[1]/span/span'
+    huh                       = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[2]/comments/div/ul/comments-item[7]/li/div[1]/div[2]/div[1]/a'
+    cut_first_username_path = 'li/div[1]/div[2]/div[*]/a[@data-goal-id="post_commentauthor"]/text()'
+    cut_first_date_path = 'li/div[1]/div[2]/div[*]/span[@class="comment__time"]/text()'
+    cut_first_text_path = 'li/div[1]/div[2]/div[1]/span/text()'
+    cut_first_smiles_path = 'li/div[1]/div[2]/div[*]/span[1]/span/span/text()'
+    cut_first_meme_path = 'li/div[1]/div[2]/div[1]/a/@href'
     comments = tree.xpath(base_comment_path)
     for a in comments:
-        print(a.xpath('li/@data-replies-count'))
-    print(comments)
+        reply_count = a.xpath('li/@data-replies-count')
+        like_s = 's'
+        print(reply_count)
+        print('smiles', a.xpath(cut_first_smiles_path))
+        finished_first_text = ''
+        first_username = a.xpath(cut_first_username_path)
+        first_date = a.xpath(cut_first_date_path)
+        first_text = a.xpath(cut_first_text_path)
+        first_smiles = a.xpath(cut_first_smiles_path)
+        first_meme = a.xpath(cut_first_meme_path)
+        if len(first_smiles) == 0:
+            first_smiles = [0]
+        if len(first_text) != 0:
+            finished_first_text += first_text[0]
+        if len(first_meme) != 0:
+            if len(finished_first_text) != 0:
+                finished_first_text += ' '
+            finished_first_text += f'[{first_meme}]'
+        if len(first_username) == 0:
+            first_username = a.xpath('li/div[1]/div[2]/div[*]/span[@class="comment__nickname comment__link"]/text()')
+        if first_smiles[0] == '1':
+            like_s = ''
+        print(first_username, first_date, first_text, first_smiles)
+        base_comment_string += f'{first_username[0]} ({first_date[0]}): {finished_first_text} ({first_smiles[0]} like{like_s})\n'
+        if len(reply_count) == 1:
+            key = a.xpath('@key')
+            post_id = a.xpath('@post-id')
+            comment_replies_request = requests.get(f'https://ifunny.co/api/content/{post_id}/comments/{key}/replies')
+            print(key, post_id)
+    print(base_comment_string)
 
 
 def run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode):
