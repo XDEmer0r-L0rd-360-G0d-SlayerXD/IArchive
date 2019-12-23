@@ -271,10 +271,10 @@ def grab_archived():
     return post_data_links, post_dump_links, smile_data_links, smile_dump_links
 
 
-def save_post(full_url):
-    content_type = full_url.split('/')[-2]
+def save_post(url_part):
+    content_type = url_part.split('/')[-2]
     prep, name = '', ''
-    response = requests.get(full_url)
+    response = requests.get('https://ifunny.co' + url_part)
     print('content', content_type)
     tree = html.fromstring(response.content)
     if content_type == 'picture' or content_type == 'meme':
@@ -296,7 +296,7 @@ def save_post(full_url):
     return 0
 
 
-def generate_comments_file(full_url):
+def generate_comments_file(url_part):
 
     def grab_comment_info(comment_element):
         cut_first_username_path = 'li/div[1]/div[2]/div[*]/a[@data-goal-id="post_commentauthor"]/text()'
@@ -316,6 +316,8 @@ def generate_comments_file(full_url):
             first_smiles = [0]
         if len(first_text) == 0:
             first_text = ['']
+        if len(first_date) == 0:
+            first_date = ['None Given']
         if len(first_meme) == 0:
             first_meme = ['']
         else:
@@ -326,7 +328,7 @@ def generate_comments_file(full_url):
         return first_username[0], first_date[0], first_text[0], first_meme[0], first_smiles[0], len(depth_counter)
 
     base_comment_string = ''
-    base_page = requests.get(full_url)
+    base_page = requests.get('https://ifunny.co' + url_part)
     tree = html.fromstring(base_page.content)
     base_comment_path = '/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[2]/comments/div/ul/comments-item[*]'
     comments = tree.xpath(base_comment_path)
@@ -360,8 +362,8 @@ def generate_comments_file(full_url):
         f.write(base_comment_string)
 
 
-def generate_post_info_file(full_url):
-    page = html.fromstring(requests.get(full_url).content)
+def generate_post_info_file(url_part):
+    page = html.fromstring(requests.get('https://ifunny.co' + url_part).content)
     username = page.xpath('//div/a[@class="metapanel__user-nick js-goalcollector-action js-dwhcollector-actionsource"]/text()')[0]
     date = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[1]/div/div/a/span/text()')[0]
     original_poster = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[1]/div/div/div/a/text()')
@@ -369,7 +371,7 @@ def generate_post_info_file(full_url):
     repubs = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[2]/post-actions/div/ul/li[2]/a/span/text()')[0]
     if len(original_poster) == 0:
         original_poster = [username]
-    final_string = f'Original Poster: {original_poster[0]}\nShared by: {username}\nPosted on: {date}\nSmiles: {smiles}\nRepubs: {repubs}'
+    final_string = f'Original Poster: {original_poster[0]}\nShared by: {username}\nPosted on: {date}\nSmiles: {smiles}\nRepubs: {repubs}\nHref: {url_part}'
     print(final_string)
     with open('Info.txt', 'w') as f:
         f.write(final_string)
@@ -402,8 +404,73 @@ def run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, w
     return post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump
 
 
+def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data,
+              smile_bank_dump, post_data_links, post_dump_links, smile_data_links, smile_dump_links):
+    if len(post_bank) != 0:
+        if want_dump == 1:
+            post_bank_dump = post_bank
+        if want_data == 1:
+            post_bank_data = post_bank
+    if len(smile_bank) != 0:
+        if want_dump == 1:
+            smile_bank_dump = smile_bank
+        if want_data == 1:
+            smile_bank_data = smile_bank
+    new_post_data_links, new_post_dump_links, new_smile_data_links, new_smile_dump_links = set(), set(), set(), set()
+    for a in post_bank_data:
+        if a not in post_data_links:
+            new_post_data_links.add(a)
+    for a in post_bank_dump:
+        if a not in post_dump_links:
+            new_post_dump_links.add(a)
+    if a in smile_bank_data:
+        if a not in smile_data_links:
+            new_smile_data_links.add(a)
+    if a in smile_bank_dump:
+        if a not in smile_dump_links:
+            new_smile_dump_links.add(a)
+
+    os.chdir('post_data')
+    for a in new_post_data_links:
+        dir_name = a.split('/')[-1]
+        if not os.path.isdir(dir_name):
+            os.mkdir(dir_name)
+        os.chdir(dir_name)
+        save_post(a)
+        generate_comments_file(a)
+        generate_post_info_file(a)
+        os.chdir('..')
+        with open('saved_posts_data.txt', 'w') as f:
+            f.write(a)
+    os.chdir('..')
+    os.chdir('smile_data')
+    for a in new_smile_data_links:
+        dir_name = a.split('/')[-1]
+        os.mkdir(dir_name)
+        os.chdir(dir_name)
+        save_post(a)
+        generate_comments_file(a)
+        generate_post_info_file(a)
+        os.chdir('..')
+        with open('saved_smiles_data.txt', 'w') as f:
+            f.write(a)
+    os.chdir('..')
+    os.chdir('post_dump')
+    for a in new_post_dump_links:
+        save_post(a)
+        with open('saved_posts_dump.txt', 'w') as f:
+            f.write(a)
+    os.chdir('..')
+    os.chdir('smile_dump')
+    for a in new_smile_dump_links:
+        save_post(a)
+        with open('saved_smiles_dump.txt', 'w') as f:
+            f.write(a)
+    os.chdir('..')
+
+
 def main():
-    # order: pre_setup(), prep_user_files, grab_archived
+    # order: setup(), run_setup(), save_loop()
     me = 'https://ifunny.co/user/namisboss'
     blast = 'https://ifunny.co/user/Gone_With_The_Blastwave'
     smiles = 'https://ifunny.co/account/smiles'
@@ -411,14 +478,16 @@ def main():
     user = 'Gone_With_The_Blastwave'
     stress = 'https://ifunny.co/user/iFurnyAds'
     # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
-    # prep_user_files(user)
-    generate_post_info_file('https://ifunny.co/meme/I9mmsVS37')
+    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = setup()
+    post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode)
+    post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
+    save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data,
+              smile_bank_dump, post_data_links, post_dump_links, smile_data_links, smile_dump_links)
+    # generate_post_info_file('https://ifunny.co/meme/I9mmsVS37')
     exit()
     all_href = grab_post_urls(stress, 0, '')
     for a in all_href:
         save_post(a)
-    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = setup()
-    run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode)
     exit()
     print('teast')
 
