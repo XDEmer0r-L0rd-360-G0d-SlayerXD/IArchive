@@ -378,6 +378,7 @@ def generate_post_info_file(full_url):
 def run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode):
     prep_user_files(user)
     post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
+    post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = set(), set(), set(), set(), set(), set()
     if want_posts == 1:
         if fast_mode == 0:
             post_bank = grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '')
@@ -398,7 +399,7 @@ def run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, w
                 smile_bank_dump = grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, fast_mode, smile_dump_links)
     # all links are in sets, and am currently in user directory
 
-    return
+    return post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump
 
 
 def main():
