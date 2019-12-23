@@ -271,10 +271,10 @@ def grab_archived():
     return post_data_links, post_dump_links, smile_data_links, smile_dump_links
 
 
-def save_post(url):
-    content_type = url.split('/')[1]
+def save_post(full_url):
+    content_type = full_url.split('/')[-2]
     prep, name = '', ''
-    response = requests.get('https://ifunny.co' + url)
+    response = requests.get(full_url)
     print('content', content_type)
     tree = html.fromstring(response.content)
     if content_type == 'picture' or content_type == 'meme':
