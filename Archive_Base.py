@@ -368,10 +368,10 @@ def generate_post_info_file(url_part):
     date = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[1]/div/div/a/span/text()')[0]
     original_poster = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[1]/div/div/div/a/text()')
     smiles = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[2]/post-actions/@initial-smiles')[0]
-    repubs = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[2]/post-actions/div/ul/li[2]/a/span/text()')[0]
+    comments = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[2]/post-actions/div/ul/li[2]/a/span/text()')[0]
     if len(original_poster) == 0:
         original_poster = [username]
-    final_string = f'Original Poster: {original_poster[0]}\nShared by: {username}\nPosted on: {date}\nSmiles: {smiles}\nRepubs: {repubs}\nHref: {url_part}'
+    final_string = f'Original Poster: {original_poster[0]}\nShared by: {username}\nPosted on: {date}\nSmiles: {smiles}\nReplies: {comments}\nHref: {url_part}'
     print(final_string)
     with open('Info.txt', 'w') as f:
         f.write(final_string)
@@ -423,10 +423,10 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
     for a in post_bank_dump:
         if a not in post_dump_links:
             new_post_dump_links.add(a)
-    if a in smile_bank_data:
+    for a in smile_bank_data:
         if a not in smile_data_links:
             new_smile_data_links.add(a)
-    if a in smile_bank_dump:
+    for a in smile_bank_dump:
         if a not in smile_dump_links:
             new_smile_dump_links.add(a)
 
@@ -440,8 +440,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         generate_comments_file(a)
         generate_post_info_file(a)
         os.chdir('..')
-        with open('saved_posts_data.txt', 'w') as f:
-            f.write(a)
+        with open('saved_posts_data.txt', 'a') as f:
+            f.write(a + '\n')
     os.chdir('..')
     os.chdir('smile_data')
     for a in new_smile_data_links:
@@ -452,20 +452,20 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         generate_comments_file(a)
         generate_post_info_file(a)
         os.chdir('..')
-        with open('saved_smiles_data.txt', 'w') as f:
-            f.write(a)
+        with open('saved_smiles_data.txt', 'a') as f:
+            f.write(a + '\n')
     os.chdir('..')
     os.chdir('post_dump')
     for a in new_post_dump_links:
         save_post(a)
-        with open('saved_posts_dump.txt', 'w') as f:
-            f.write(a)
+        with open('saved_posts_dump.txt', 'a') as f:
+            f.write(a + '\n')
     os.chdir('..')
     os.chdir('smile_dump')
     for a in new_smile_dump_links:
         save_post(a)
-        with open('saved_smiles_dump.txt', 'w') as f:
-            f.write(a)
+        with open('saved_smiles_dump.txt', 'a') as f:
+            f.write(a + '\n')
     os.chdir('..')
 
 
@@ -479,10 +479,12 @@ def main():
     stress = 'https://ifunny.co/user/iFurnyAds'
     # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = setup()
+    start_time = time.time()
     post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode)
     post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
     save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data,
               smile_bank_dump, post_data_links, post_dump_links, smile_data_links, smile_dump_links)
+    print(f'Update took {time.time() - start_time} seconds')
     # generate_post_info_file('https://ifunny.co/meme/I9mmsVS37')
     exit()
     all_href = grab_post_urls(stress, 0, '')
