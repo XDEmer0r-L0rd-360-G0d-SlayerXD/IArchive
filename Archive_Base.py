@@ -356,8 +356,23 @@ def generate_comments_file(full_url):
                 base_comment_string += sub_comment_string
 
     print(base_comment_string)
-    with open('comments.txt', 'w') as f:
+    with open('Comments.txt', 'w') as f:
         f.write(base_comment_string)
+
+
+def generate_post_info_file(full_url):
+    page = html.fromstring(requests.get(full_url).content)
+    username = page.xpath('//div/a[@class="metapanel__user-nick js-goalcollector-action js-dwhcollector-actionsource"]/text()')[0]
+    date = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[1]/div/div/a/span/text()')[0]
+    original_poster = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[1]/div/div/div/a/text()')
+    smiles = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[2]/post-actions/@initial-smiles')[0]
+    repubs = page.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/ul/li[1]/div/div[3]/div/div[1]/div[2]/post-actions/div/ul/li[2]/a/span/text()')[0]
+    if len(original_poster) == 0:
+        original_poster = [username]
+    final_string = f'Original Poster: {original_poster[0]}\nShared by: {username}\nPosted on: {date}\nSmiles: {smiles}\nRepubs: {repubs}'
+    print(final_string)
+    with open('Info.txt', 'w') as f:
+        f.write(final_string)
 
 
 def run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode):
@@ -394,9 +409,9 @@ def main():
     my_token = 'c00b9bdc7d3fc37bc313b98c3396ac2dc91a78d93f80a1d6f486532c3e29cd2d'
     user = 'Gone_With_The_Blastwave'
     stress = 'https://ifunny.co/user/iFurnyAds'
-    # save_post('/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
+    # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
     # prep_user_files(user)
-    generate_comments_file('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
+    generate_post_info_file('https://ifunny.co/meme/I9mmsVS37')
     exit()
     all_href = grab_post_urls(stress, 0, '')
     for a in all_href:
