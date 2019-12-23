@@ -297,6 +297,33 @@ def save_post(url):
 
 
 def generate_comments_file(full_url):
+
+    def grab_comment_info(comment_element):
+        cut_first_username_path = 'li/div[1]/div[2]/div[*]/a[@data-goal-id="post_commentauthor"]/text()'
+        cut_first_date_path = 'li/div[1]/div[2]/div[*]/span[@class="comment__time"]/text()'
+        cut_first_text_path = 'li/div[1]/div[2]/div[1]/span/text()'
+        cut_first_smiles_path = 'li/div[1]/div[2]/div[*]/span[1]/span/span/text()'
+        cut_first_meme_path = 'li/div[1]/div[2]/div[1]/a/@href'
+        depth_path = 'li/div[1]/div[1]/div'
+
+        depth_counter = comment_element.xpath(depth_path)
+        first_username = comment_element.xpath(cut_first_username_path)
+        first_date = comment_element.xpath(cut_first_date_path)
+        first_text = comment_element.xpath(cut_first_text_path)
+        first_smiles = comment_element.xpath(cut_first_smiles_path)
+        first_meme = comment_element.xpath(cut_first_meme_path)
+        if len(first_smiles) == 0:
+            first_smiles = [0]
+        if len(first_text) == 0:
+            first_text = ['']
+        if len(first_meme) == 0:
+            first_meme = ['']
+        if len(first_username) == 0:
+            first_username = comment_element.xpath('li/div[1]/div[2]/div[*]/span[@class="comment__nickname comment__link"]/text()')
+        print('debug', first_username, first_date, first_text, first_meme, first_smiles, len(depth_counter))
+        return first_username[0], first_date[0], first_text[0], first_meme[0], first_smiles[0], len(depth_counter)
+
+
     base_comment_string = ''
     base_page = requests.get(full_url)
     tree = html.fromstring(base_page.content)
@@ -316,7 +343,7 @@ def generate_comments_file(full_url):
     for a in comments:
         reply_count = a.xpath('li/@data-replies-count')
         like_s = 's'
-        print(reply_count)
+        print('reply count', reply_count)
         print('smiles', a.xpath(cut_first_smiles_path))
         finished_first_text = ''
         first_username = a.xpath(cut_first_username_path)
@@ -336,13 +363,27 @@ def generate_comments_file(full_url):
             first_username = a.xpath('li/div[1]/div[2]/div[*]/span[@class="comment__nickname comment__link"]/text()')
         if first_smiles[0] == '1':
             like_s = ''
-        print(first_username, first_date, first_text, first_smiles)
+        # print(first_username, first_date, first_text, first_smiles)
         base_comment_string += f'{first_username[0]} ({first_date[0]}): {finished_first_text} ({first_smiles[0]} like{like_s})\n'
         if len(reply_count) == 1:
             key = a.xpath('@key')
             post_id = a.xpath('@post-id')
-            comment_replies_request = requests.get(f'https://ifunny.co/api/content/{post_id}/comments/{key}/replies')
             print(key, post_id)
+            comment_replies_request = requests.get(f'https://ifunny.co/api/content/{post_id[0]}/comments/{key[0]}/replies')
+            sub_comments_tree = html.fromstring(comment_replies_request.content)
+            print('sub', sub_comments_tree.xpath('//comments-item'))
+            for b in sub_comments_tree.xpath('//comments-item'):
+                print('fun second', grab_comment_info(b))
+                sub_comment_string = ''
+                depth_path = 'li/div[1]/div[1]/div'
+                depth_counter = b.xpath(depth_path)
+                sub_comment_string += '\u2022' * len(depth_counter)
+                # sub_username = b.xpath('li/div[1]/div[2]/div[*]/a[@data-goal-id="post_commentauthor"]/text()')
+                # sub_date = b.xpath('li/div[1]/div[2]/div[2]/span/text()')
+                # sub_text = b.xpath('/html/body/comments-item[1]/li/div[1]/div[2]/div[*]/span[@class="comment__row comment__row_type_message"]/text()')
+                # sub_smile = b.xpath('li/div[1]/div[2]/div[*]/span[1]/span/span/text()')
+                # sub_meme = b.xpath('li/div[1]/div[2]/div[1]/a/@href')
+
     print(base_comment_string)
 
 
