@@ -291,7 +291,7 @@ def save_post(url_part):
     downloaded = requests.get(prep)
     if downloaded.status_code is not 200:
         return 1
-    with open(name, 'wb') as f:
+    with open(url_part.split('/')[-1], 'wb') as f:
         f.write(downloaded.content)
     return 0
 
@@ -327,6 +327,7 @@ def generate_comments_file(url_part):
         print('debug', first_username, first_date, first_text, first_meme, first_smiles, len(depth_counter))
         return first_username[0], first_date[0], first_text[0], first_meme[0], first_smiles[0], len(depth_counter)
 
+    grab_limit = 100
     base_comment_string = ''
     base_page = requests.get('https://ifunny.co' + url_part)
     tree = html.fromstring(base_page.content)
@@ -344,6 +345,13 @@ def generate_comments_file(url_part):
         if has_replies == 1:
             key = a.xpath('@key')
             post_id = a.xpath('@post-id')
+            if grab_limit == 0:
+                base_comment_string += '--NO MORE COMMENT RESPONSES SAVED TO SAVE TIME--'
+                continue
+            elif grab_limit <= 0:
+                continue
+            print('GRAB LIMIT:', grab_limit)
+            grab_limit -= 1
             comment_replies_request = requests.get(f'https://ifunny.co/api/content/{post_id[0]}/comments/{key[0]}/replies')
             sub_comments_tree = html.fromstring(comment_replies_request.content)
             for b in sub_comments_tree.xpath('//comments-item'):
@@ -475,10 +483,10 @@ def main():
     blast = 'https://ifunny.co/user/Gone_With_The_Blastwave'
     smiles = 'https://ifunny.co/account/smiles'
     my_token = 'c00b9bdc7d3fc37bc313b98c3396ac2dc91a78d93f80a1d6f486532c3e29cd2d'
-    user = 'Gone_With_The_Blastwave'
     stress = 'https://ifunny.co/user/iFurnyAds'
     # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = setup()
+    user = 'Gone_With_The_Blastwave'
     start_time = time.time()
     post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode)
     post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
