@@ -221,7 +221,7 @@ def grab_post_urls(start_url, exclude_repubs=0, token='', short_scan=0, already_
     overlaps = 0
     name_counter = 0
     while True:
-        print(count)
+        print('on page:', count, 'post~:', count * 10 if token == '' else 20)
         if count == 200:
             break
         count += 1
@@ -250,10 +250,10 @@ def grab_post_urls(start_url, exclude_repubs=0, token='', short_scan=0, already_
                         if overlaps == 5:
                             return bank
         bank.update(cleaned_grab)
-        print(bank)
+        # print(bank)
         try:
             next_url = start_url + ('/timeline/' if token == '' else '/') + tree.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[1]/@data-next')[0]
-            print(next_url)
+            # print(next_url)
         except IndexError:
             break
     print('done', len(bank))
@@ -337,7 +337,7 @@ def generate_comments_file(url_part):
             first_meme = ['[https://ifunny.co' + first_meme[0] + ']']
         if len(first_username) == 0:
             first_username = comment_element.xpath('li/div[1]/div[2]/div[*]/span[@class="comment__nickname comment__link"]/text()')
-        print('debug', first_username, first_date, first_text, first_meme, first_smiles, len(depth_counter))
+        # print('debug', first_username, first_date, first_text, first_meme, first_smiles, len(depth_counter))
         return first_username[0], first_date[0], first_text[0], first_meme[0], first_smiles[0], len(depth_counter)
 
     grab_limit = 100
@@ -363,7 +363,7 @@ def generate_comments_file(url_part):
                 continue
             elif grab_limit <= 0:
                 continue
-            print('GRAB LIMIT:', grab_limit)
+            print('Sub-comment grab limit:', grab_limit)
             grab_limit -= 1
             comment_replies_request = requests.get(f'https://ifunny.co/api/content/{post_id[0]}/comments/{key[0]}/replies')
             sub_comments_tree = html.fromstring(comment_replies_request.content)
@@ -378,7 +378,7 @@ def generate_comments_file(url_part):
                 sub_comment_string += f'{current_comment[0]} ({current_comment[1]}): {current_comment[2]} {current_comment[3]} ({current_comment[4]} like{like_s})\n'
                 base_comment_string += sub_comment_string
 
-    print(base_comment_string)
+    # print(base_comment_string)
     with open('Comments.txt', 'w', encoding='utf-8') as f:
         f.write(base_comment_string)
 
@@ -393,7 +393,7 @@ def generate_post_info_file(url_part):
     if len(original_poster) == 0:
         original_poster = [username]
     final_string = f'Original Poster: {original_poster[0]}\nShared by: {username}\nPosted on: {date}\nSmiles: {smiles}\nReplies: {comments}\nHref: {url_part}'
-    print(final_string)
+    # print(final_string)
     with open('Info.txt', 'w') as f:
         f.write(final_string)
 
@@ -471,7 +471,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
             new_smile_dump_links.add(a)
 
     os.chdir('post_data')
-    for a in new_post_data_links:
+    for num_a, a in enumerate(new_post_data_links):
+        print(f'Post Data: {num_a}/{len(new_post_data_links)}')
         dir_name = a.split('/')[0]
         if not os.path.isdir(dir_name):
             os.mkdir(dir_name)
@@ -486,9 +487,11 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
             f.write(a + '\n')
     os.chdir('..')
     os.chdir('smile_data')
-    for a in new_smile_data_links:
+    for num_a, a in enumerate(new_smile_data_links):
+        print(f'Smile Data: {num_a}/{len(new_smile_data_links)}')
         dir_name = a.split('/')[0]
-        os.mkdir(dir_name)
+        if not os.path.isdir(dir_name):
+            os.mkdir(dir_name)
         os.chdir(dir_name)
         name = a[:num_cutoff]
         a = a[num_cutoff:]
@@ -500,7 +503,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
             f.write(a + '\n')
     os.chdir('..')
     os.chdir('post_dump')
-    for a in new_post_dump_links:
+    for num_a, a in enumerate(new_post_dump_links):
+        print(f'Post Dump: {num_a}/{len(new_post_dump_links)}')
         name = a[:num_cutoff]
         a = a[num_cutoff:]
         save_post(a, name)
@@ -508,7 +512,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
             f.write(a + '\n')
     os.chdir('..')
     os.chdir('smile_dump')
-    for a in new_smile_dump_links:
+    for num_a, a in enumerate(new_smile_dump_links):
+        print(f'Smile Dump: {num_a}/{len(new_smile_dump_links)}')
         name = a[:num_cutoff]
         a = a[num_cutoff:]
         save_post(a, name)
@@ -526,7 +531,7 @@ def main():
     stress = 'https://ifunny.co/user/iFurnyAds'
     # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = setup()
-    user = 'Gone_With_The_Blastwave'
+    # user = 'Gone_With_The_Blastwave'
     start_time = time.time()
     post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting)
     post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
