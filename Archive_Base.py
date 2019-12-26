@@ -27,6 +27,7 @@ class SetupContainer:
         self.want_smiled = IntVar()
         self.folder_for_posts = IntVar()
         self.post_per_folder = IntVar()
+        self.want_chron = IntVar()
         self.fast_mode = IntVar()
         self.user_box = Entry(self.root)
         self.user_box.insert(0, 'Enter Username')
@@ -40,6 +41,7 @@ class SetupContainer:
         save_post_check = Checkbutton(self.root, text='Save all posts in folder', variable=self.folder_for_posts)
         save_posts_data_check = Checkbutton(self.root, text='Save additional data per post', variable=self.post_per_folder)
         fast_mode_check = Checkbutton(self.root, text='Fast Update Mode (may miss some posts)', variable=self.fast_mode)
+        chron_names_check = Checkbutton(self.root, text='Name files in chronological order (extra scan for each)', variable=self.want_chron)
         self.user_box.pack()
         self.grab_posts_frame.pack()
         post_check.pack()
@@ -48,6 +50,7 @@ class SetupContainer:
         save_posts_data_check.pack()
         smile_check.pack()
         fast_mode_check.pack()
+        chron_names_check.pack()
         but.pack()
 
         self.root.mainloop()
@@ -152,7 +155,7 @@ class SetupContainer:
             self.auth_label.config(text='Key Works')
 
     def grab(self):
-        return self.user_box.get(), self.want_posts.get(), self.want_repubs.get(), self.want_smiled.get(), self.login_cookie, self.folder_for_posts.get(), self.post_per_folder.get(), self.fast_mode.get()
+        return self.user_box.get(), self.want_posts.get(), self.want_repubs.get(), self.want_smiled.get(), self.login_cookie, self.folder_for_posts.get(), self.post_per_folder.get(), self.fast_mode.get(), self.want_chron.get()
 
     def done(self):
         self.root.quit()
@@ -289,7 +292,7 @@ def save_post(url_part):
         prep = grabbed_url[0]
 
     downloaded = requests.get(prep)
-    if downloaded.status_code is not 200:
+    if downloaded.status_code != 200:
         return 1
     with open(url_part.split('/')[-1], 'wb') as f:
         f.write(downloaded.content)
@@ -485,7 +488,7 @@ def main():
     my_token = 'c00b9bdc7d3fc37bc313b98c3396ac2dc91a78d93f80a1d6f486532c3e29cd2d'
     stress = 'https://ifunny.co/user/iFurnyAds'
     # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
-    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode = setup()
+    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = setup()
     user = 'Gone_With_The_Blastwave'
     start_time = time.time()
     post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode)
