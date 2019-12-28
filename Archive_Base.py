@@ -240,11 +240,13 @@ def grab_post_urls(start_url, exclude_repubs=0, token='', short_scan=0, already_
                 cur_link = a.split('?')[0]
                 if cur_link not in already_saved:
                     if max_name_count != 0:
-                        add_num = str(max_name_count - name_counter - 1)
+                        add_num = str(max_name_count - name_counter)
                         add_num = '0' * (6 - len(add_num)) + add_num
                         cur_link = add_num + cur_link
                         name_counter += 1
                     # print('new name', cur_link)
+                    if tree.xpath(f'/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[{num_a + 1}]/div/div/a/svg/@class="Icon grid__icon grid__icon_top"'):
+                        cur_link = 'pinned' + cur_link
                     cleaned_grab.append(cur_link)
                 else:
                     if short_scan == 1:
@@ -458,20 +460,17 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         if want_data == 1:
             smile_bank_data = smile_bank
     new_post_data_links, new_post_dump_links, new_smile_data_links, new_smile_dump_links = set(), set(), set(), set()
-    num_cutoff = 6
-    if chron_counting == 0:
-        num_cutoff = 0
     for a in post_bank_data:
-        if a[num_cutoff:] not in post_data_links:
+        if a[a.index('/'):] not in post_data_links:
             new_post_data_links.add(a)
     for a in post_bank_dump:
-        if a[num_cutoff:] not in post_dump_links:
+        if a[a.index('/'):] not in post_dump_links:
             new_post_dump_links.add(a)
     for a in smile_bank_data:
-        if a[num_cutoff:] not in smile_data_links:
+        if a[a.index('/'):] not in smile_data_links:
             new_smile_data_links.add(a)
     for a in smile_bank_dump:
-        if a[num_cutoff:] not in smile_dump_links:
+        if a[a.index('/'):] not in smile_dump_links:
             new_smile_dump_links.add(a)
 
     os.chdir('post_data')
@@ -481,8 +480,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         if not os.path.isdir(dir_name):
             os.mkdir(dir_name)
         os.chdir(dir_name)
-        name = a[:num_cutoff]
-        a = a[num_cutoff:]
+        name = a[:a.index('/')]
+        a = a[a.index('/'):]
         save_post(a, name)
         generate_comments_file(a)
         generate_post_info_file(a)
@@ -498,8 +497,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         if not os.path.isdir(dir_name):
             os.mkdir(dir_name)
         os.chdir(dir_name)
-        name = a[:num_cutoff]
-        a = a[num_cutoff:]
+        name = a[:a.index('/')]
+        a = a[a.index('/'):]
         save_post(a, name)
         generate_comments_file(a)
         generate_post_info_file(a)
@@ -510,8 +509,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
     os.chdir('post_dump')
     for num_a, a in enumerate(new_post_dump_links):
         print(f'Post Dump: {num_a}/{len(new_post_dump_links)} {a}')
-        name = a[:num_cutoff]
-        a = a[num_cutoff:]
+        name = a[:a.index('/')]
+        a = a[a.index('/'):]
         save_post(a, name)
         with open('saved_posts_dump.txt', 'a') as f:
             f.write(a + '\n')
@@ -519,8 +518,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
     os.chdir('smile_dump')
     for num_a, a in enumerate(new_smile_dump_links):
         print(f'Smile Dump: {num_a}/{len(new_smile_dump_links)} {a}')
-        name = a[:num_cutoff]
-        a = a[num_cutoff:]
+        name = a[:a.index('/')]
+        a = a[a.index('/'):]
         save_post(a, name)
         with open('saved_smiles_dump.txt', 'a') as f:
             f.write(a + '\n')
@@ -528,6 +527,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
 
 # make that saves show file name too via adjusting print line
 # 1870s for 160 posts with both types
+# 674s for 371 post dump
+# 1361s for 371 post data with few sub-comment grabs
 
 
 def main():
@@ -540,7 +541,7 @@ def main():
     update_my_posts = 'namisboss', 1, 0, 0, '', 1, 1, 1, 1
     # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
     # replace update_my_posts with setup()
-    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = update_my_posts
+    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = setup()
     # user = 'Gone_With_The_Blastwave'
     start_time = time.time()
     post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting)
