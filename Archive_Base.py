@@ -5,6 +5,7 @@ from lxml import html
 from pprint import pprint
 from selenium import webdriver
 import time
+import winsound
 
 
 class SetupContainer:
@@ -41,7 +42,7 @@ class SetupContainer:
         save_post_check = Checkbutton(self.root, text='Save all posts in folder', variable=self.folder_for_posts)
         save_posts_data_check = Checkbutton(self.root, text='Save additional data per post', variable=self.post_per_folder)
         fast_mode_check = Checkbutton(self.root, text='Fast Update Mode (may miss some posts, not for first scan)', variable=self.fast_mode)
-        chron_names_check = Checkbutton(self.root, text='Name files in chronological order (extra scan for each)', variable=self.want_chron)
+        chron_names_check = Checkbutton(self.root, text='Name files in chronological order (extra scan for each, must be uninterupted)', variable=self.want_chron)
         self.user_box.pack()
         self.grab_posts_frame.pack()
         post_check.pack()
@@ -221,10 +222,10 @@ def grab_post_urls(start_url, exclude_repubs=0, token='', short_scan=0, already_
     overlaps = 0
     name_counter = 0
     while True:
-        print('on page:', count, 'post~:', count * 10 if token == '' else 20)
+        count += 1
+        print('on page:', count, 'posts~:', count * 10 if token == '' else 20)
         if count == 200:
             break
-        count += 1
         response = requests.get(next_url, cookies=cookie_form)
         tree = html.fromstring(response.content)
         grab = tree.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[*]/div/div/a/@href')
@@ -239,18 +240,19 @@ def grab_post_urls(start_url, exclude_repubs=0, token='', short_scan=0, already_
                 cur_link = a.split('?')[0]
                 if cur_link not in already_saved:
                     if max_name_count != 0:
-                        add_num = str(max_name_count - name_counter)
+                        add_num = str(max_name_count - name_counter - 1)
                         add_num = '0' * (6 - len(add_num)) + add_num
                         cur_link = add_num + cur_link
                         name_counter += 1
+                    # print('new name', cur_link)
                     cleaned_grab.append(cur_link)
                 else:
                     if short_scan == 1:
                         overlaps += 1
-                        if overlaps == 5:
+                        if overlaps == 7:
+                            bank.update(cleaned_grab)
                             return bank
         bank.update(cleaned_grab)
-        # print(bank)
         try:
             next_url = start_url + ('/timeline/' if token == '' else '/') + tree.xpath('/html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div[2]/ul/li[1]/@data-next')[0]
             # print(next_url)
@@ -340,7 +342,7 @@ def generate_comments_file(url_part):
         # print('debug', first_username, first_date, first_text, first_meme, first_smiles, len(depth_counter))
         return first_username[0], first_date[0], first_text[0], first_meme[0], first_smiles[0], len(depth_counter)
 
-    grab_limit = 100
+    grab_limit = 50
     base_comment_string = ''
     base_page = requests.get('https://ifunny.co' + url_part)
     tree = html.fromstring(base_page.content)
@@ -425,19 +427,19 @@ def run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, w
             post_bank = grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', max_name_count=post_len)
         if want_data == 1:
             if fast_mode == 1:
-                post_bank_data = grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', fast_mode, post_data_links, max_name_count=(len(post_data_links) + post_data_len - 1))
+                post_bank_data = grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', fast_mode, post_data_links, max_name_count=(len(post_data_links) + post_data_len))
         if want_dump == 1:
             if fast_mode == 1:
-                post_bank_dump = grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', fast_mode, post_dump_links, max_name_count=(len(post_dump_links) + post_dump_len - 1))
+                post_bank_dump = grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', fast_mode, post_dump_links, max_name_count=(len(post_dump_links) + post_dump_len))
     if want_smiles == 1:
         if fast_mode == 0:
             smile_bank = grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, max_name_count=smile_len)
         if want_data == 1:
             if fast_mode == 1:
-                smile_bank_data = grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, fast_mode, smile_data_links, max_name_count=(len(smile_data_links) + smile_data_len - 1))
+                smile_bank_data = grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, fast_mode, smile_data_links, max_name_count=(len(smile_data_links) + smile_data_len))
         if want_dump == 1:
             if fast_mode == 1:
-                smile_bank_dump = grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, fast_mode, smile_dump_links, max_name_count=(len(smile_dump_links) + smile_dump_len - 1))
+                smile_bank_dump = grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, fast_mode, smile_dump_links, max_name_count=(len(smile_dump_links) + smile_dump_len))
     # all links are in sets, and am currently in user directory
 
     return post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump
@@ -457,6 +459,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
             smile_bank_data = smile_bank
     new_post_data_links, new_post_dump_links, new_smile_data_links, new_smile_dump_links = set(), set(), set(), set()
     num_cutoff = 6
+    if chron_counting == 0:
+        num_cutoff = 0
     for a in post_bank_data:
         if a[num_cutoff:] not in post_data_links:
             new_post_data_links.add(a)
@@ -472,7 +476,7 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
 
     os.chdir('post_data')
     for num_a, a in enumerate(new_post_data_links):
-        print(f'Post Data: {num_a}/{len(new_post_data_links)}')
+        print(f'Post Data: {num_a}/{len(new_post_data_links)} {a}')
         dir_name = a.split('/')[0]
         if not os.path.isdir(dir_name):
             os.mkdir(dir_name)
@@ -487,8 +491,9 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
             f.write(a + '\n')
     os.chdir('..')
     os.chdir('smile_data')
+    name = ''
     for num_a, a in enumerate(new_smile_data_links):
-        print(f'Smile Data: {num_a}/{len(new_smile_data_links)}')
+        print(f'Smile Data: {num_a}/{len(new_smile_data_links)} {a}')
         dir_name = a.split('/')[0]
         if not os.path.isdir(dir_name):
             os.mkdir(dir_name)
@@ -504,7 +509,7 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
     os.chdir('..')
     os.chdir('post_dump')
     for num_a, a in enumerate(new_post_dump_links):
-        print(f'Post Dump: {num_a}/{len(new_post_dump_links)}')
+        print(f'Post Dump: {num_a}/{len(new_post_dump_links)} {a}')
         name = a[:num_cutoff]
         a = a[num_cutoff:]
         save_post(a, name)
@@ -513,13 +518,16 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
     os.chdir('..')
     os.chdir('smile_dump')
     for num_a, a in enumerate(new_smile_dump_links):
-        print(f'Smile Dump: {num_a}/{len(new_smile_dump_links)}')
+        print(f'Smile Dump: {num_a}/{len(new_smile_dump_links)} {a}')
         name = a[:num_cutoff]
         a = a[num_cutoff:]
         save_post(a, name)
         with open('saved_smiles_dump.txt', 'a') as f:
             f.write(a + '\n')
     os.chdir('..')
+
+# make that saves show file name too via adjusting print line
+# 1870s for 160 posts with both types
 
 
 def main():
@@ -529,8 +537,10 @@ def main():
     smiles = 'https://ifunny.co/account/smiles'
     my_token = 'c00b9bdc7d3fc37bc313b98c3396ac2dc91a78d93f80a1d6f486532c3e29cd2d'
     stress = 'https://ifunny.co/user/iFurnyAds'
+    update_my_posts = 'namisboss', 1, 0, 0, '', 1, 1, 1, 1
     # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
-    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = setup()
+    # replace update_my_posts with setup()
+    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = update_my_posts
     # user = 'Gone_With_The_Blastwave'
     start_time = time.time()
     post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting)
@@ -538,6 +548,7 @@ def main():
     save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data,
               smile_bank_dump, post_data_links, post_dump_links, smile_data_links, smile_dump_links, chron_counting)
     print(f'Update took {time.time() - start_time} seconds')
+    winsound.Beep(700, 1000)
     # generate_post_info_file('https://ifunny.co/meme/I9mmsVS37')
     exit()
     all_href = grab_post_urls(stress, 0, '')
