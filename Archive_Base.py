@@ -548,8 +548,8 @@ def main():
     post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
     save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data,
               smile_bank_dump, post_data_links, post_dump_links, smile_data_links, smile_dump_links, chron_counting)
-    print(f'Update took {time.time() - start_time} seconds')
     winsound.Beep(700, 1000)
+    input(f'Update took {time.time() - start_time} seconds')
     # generate_post_info_file('https://ifunny.co/meme/I9mmsVS37')
     exit()
     all_href = grab_post_urls(stress, 0, '')
