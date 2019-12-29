@@ -118,6 +118,7 @@ class SetupContainer:
 
     def get_cookies(self, email, password):
         options = webdriver.FirefoxOptions()
+
         # options.add_argument('-headless')
         driver = webdriver.Firefox(options=options)
         driver.get('https://ifunny.co')
@@ -223,7 +224,6 @@ def grab_post_urls(start_url, exclude_repubs=0, token='', short_scan=0, already_
     name_counter = 0
     while True:
         count += 1
-        print('on page:', count, 'posts~:', count * 10 if token == '' else 20)
         if count == 200:
             break
         response = requests.get(next_url, cookies=cookie_form)
@@ -490,6 +490,7 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         saved = save_post(a, name)
         if saved == 1:
             error.append(a)
+            os.chdir('..')
             continue
         generate_comments_file(a)
         generate_post_info_file(a)
@@ -510,6 +511,7 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         saved = save_post(a, name)
         if saved == 1:
             error.append(a)
+            os.chdir('..')
             continue
         generate_comments_file(a)
         generate_post_info_file(a)
@@ -569,7 +571,7 @@ def main():
     save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data,
               smile_bank_dump, post_data_links, post_dump_links, smile_data_links, smile_dump_links, chron_counting)
     winsound.Beep(700, 1000)
-    input(f'Update took {time.time() - start_time} seconds')
+    input(f'Update took {time.time() - start_time} seconds. [enter to exit]')
     # generate_post_info_file('https://ifunny.co/meme/I9mmsVS37')
     exit()
     all_href = grab_post_urls(stress, 0, '')
