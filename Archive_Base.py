@@ -308,8 +308,11 @@ def save_post(url_part, given_name=''):
         given_name = url_part.split('/')[-1]
     else:
         given_name += '.' + prep.split('.')[-1]
-    with open(given_name, 'wb') as f:
-        f.write(downloaded.content)
+    try:
+        with open(given_name, 'wb') as f:
+            f.write(downloaded.content)
+    except FileNotFoundError:
+        return 1
     return 0
 
 
@@ -405,6 +408,7 @@ def generate_post_info_file(url_part):
 def run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting):
     prep_user_files(user)
     post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
+    print('Starting scans')
     post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = set(), set(), set(), set(), set(), set()
     post_data_len, post_dump_len, smile_data_len, smile_dump_len, post_len, smile_len = 0, 0, 0, 0, 0, 0
     if chron_counting == 1:
@@ -473,6 +477,7 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         if a[a.index('/'):] not in smile_dump_links:
             new_smile_dump_links.add(a)
 
+    error = []
     os.chdir('post_data')
     for num_a, a in enumerate(new_post_data_links):
         print(f'Post Data: {num_a}/{len(new_post_data_links)} {a}')
@@ -482,7 +487,10 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         os.chdir(dir_name)
         name = a[:a.index('/')]
         a = a[a.index('/'):]
-        save_post(a, name)
+        saved = save_post(a, name)
+        if saved == 1:
+            error.append(a)
+            continue
         generate_comments_file(a)
         generate_post_info_file(a)
         os.chdir('..')
@@ -499,7 +507,10 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         os.chdir(dir_name)
         name = a[:a.index('/')]
         a = a[a.index('/'):]
-        save_post(a, name)
+        saved = save_post(a, name)
+        if saved == 1:
+            error.append(a)
+            continue
         generate_comments_file(a)
         generate_post_info_file(a)
         os.chdir('..')
@@ -511,7 +522,10 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         print(f'Post Dump: {num_a}/{len(new_post_dump_links)} {a}')
         name = a[:a.index('/')]
         a = a[a.index('/'):]
-        save_post(a, name)
+        saved = save_post(a, name)
+        if saved == 1:
+            error.append(a)
+            continue
         with open('saved_posts_dump.txt', 'a') as f:
             f.write(a + '\n')
     os.chdir('..')
@@ -520,10 +534,15 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
         print(f'Smile Dump: {num_a}/{len(new_smile_dump_links)} {a}')
         name = a[:a.index('/')]
         a = a[a.index('/'):]
-        save_post(a, name)
+        saved = save_post(a, name)
+        if saved == 1:
+            error.append(a)
+            continue
         with open('saved_smiles_dump.txt', 'a') as f:
             f.write(a + '\n')
     os.chdir('..')
+    with open('errored.txt', 'w') as f:
+        f.write('\n'.join(error))
 
 # make that saves show file name too via adjusting print line
 # 1870s for 160 posts with both types
@@ -541,6 +560,7 @@ def main():
     update_my_posts = 'namisboss', 1, 0, 0, '', 1, 1, 1, 1
     # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
     # replace update_my_posts with setup()
+    print('Fill out form in new window')
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = setup()
     # user = 'Gone_With_The_Blastwave'
     start_time = time.time()
