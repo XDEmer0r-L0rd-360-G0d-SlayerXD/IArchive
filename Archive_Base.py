@@ -6,6 +6,7 @@ from pprint import pprint
 from selenium import webdriver
 import time
 import winsound
+import ensure_selenium_driver
 
 
 class SetupContainer:
@@ -117,10 +118,12 @@ class SetupContainer:
             pass_button.pack()
 
     def get_cookies(self, email, password):
-        options = webdriver.FirefoxOptions()
-
-        # options.add_argument('-headless')
-        driver = webdriver.Firefox(options=options)
+        default_browser = ensure_selenium_driver.get_browser()
+        ensure_selenium_driver.check_for_driver(default_browser)
+        if default_browser == 'firefox':
+            driver = webdriver.Firefox()
+        else:
+            driver = webdriver.Chrome()
         driver.get('https://ifunny.co')
         target = driver.find_element_by_xpath('/html/body/div[1]/div[2]/div[1]/header/div[3]/ul[2]/li[2]/a')
         target.click()
