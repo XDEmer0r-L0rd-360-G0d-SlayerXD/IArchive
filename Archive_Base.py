@@ -305,7 +305,7 @@ def save_post(url_part, given_name=''):
     if downloaded.status_code != 200:
         return 1
     if given_name == '':
-        given_name = url_part.split('/')[-1]
+        given_name = prep.split('/')[-1]
     else:
         given_name += '.' + prep.split('.')[-1]
     try:
