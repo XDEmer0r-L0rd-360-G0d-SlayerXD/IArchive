@@ -563,6 +563,11 @@ def main():
     # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
     # replace update_my_posts with setup()
     print('Fill out form in new window')
+
+    if not os.path.isdir('Accounts'):
+        os.mkdir('Accounts')
+    os.chdir('Accounts')
+
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = setup()
     # user = 'Gone_With_The_Blastwave'
     start_time = time.time()
