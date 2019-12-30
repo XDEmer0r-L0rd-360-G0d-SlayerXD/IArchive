@@ -174,11 +174,11 @@ def setup():
     try:
         values = box.grab()
     except Exception:
-        input('Program Terminated')
+        input('Program Terminated [enter to exit]')
         exit()
     box.destroy()
     if values[0].__contains__(' ') or values[0] == '' or (values[1] == 0 and values[3] == 0) or (values[5] == 0 and values[6] == 0):
-        input('Invalid Setup')
+        input('Invalid Setup [enter to exit]')
         exit()
     print('val:', values)
     return values
@@ -567,9 +567,9 @@ def main():
     # replace update_my_posts with setup()
     print('Fill out form in new window')
 
-    if not os.path.isdir('Accounts'):
-        os.mkdir('Accounts')
-    os.chdir('Accounts')
+    if not os.path.isdir('Users'):
+        os.mkdir('Users')
+    os.chdir('Users')
 
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = setup()
     # user = 'Gone_With_The_Blastwave'
