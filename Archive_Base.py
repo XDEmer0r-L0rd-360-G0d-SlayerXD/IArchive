@@ -24,6 +24,7 @@ class SetupContainer:
                 self.user_box.config(fg='black')
 
         self.root = Tk()
+        self.root.title('Setup')
         self.grab_posts_frame = Frame(self.root)
         self.grab_smiles_frame = Frame(self.root)
         self.var = IntVar()
@@ -39,14 +40,14 @@ class SetupContainer:
         self.user_box.bind('<FocusIn>', on_entry_click)
         post_check = Checkbutton(self.grab_posts_frame, text='Grab posts', variable=self.want_posts, command=self.post_options)
         but = Button(self.root, text='Start (double check options before)', command=self.done)
-        self.repub_check = Checkbutton(self.grab_posts_frame, text='Exclude Repubs (not recomended unless folder will be deleted and restated)', variable=self.want_repubs)
-        smile_check = Checkbutton(self.grab_smiles_frame, text='Grab Smiled Posts', variable=self.want_smiled, command=self.check_auth_frame)
+        self.repub_check = Checkbutton(self.grab_posts_frame, text='Exclude repubs (there better be a reason for this)', variable=self.want_repubs)
+        smile_check = Checkbutton(self.grab_smiles_frame, text='Grab smiled posts', variable=self.want_smiled, command=self.check_auth_frame)
         self.auth_label = Label(self.grab_smiles_frame, text='Authentication Unconfirmed')
         self.auth_button = Button(self.grab_smiles_frame, text='Test Authentication', command=self.auth_check)
         save_post_check = Checkbutton(self.root, text='Save all posts in folder', variable=self.folder_for_posts)
         save_posts_data_check = Checkbutton(self.root, text='Save additional data per post', variable=self.post_per_folder)
-        fast_mode_check = Checkbutton(self.root, text='Fast Update Mode (may miss some posts, not for first scan)', variable=self.fast_mode)
-        chron_names_check = Checkbutton(self.root, text='Name files in chronological order (extra scan for each, must be uninterupted)', variable=self.want_chron)
+        fast_mode_check = Checkbutton(self.root, text='Fast mode (not for first scan)', variable=self.fast_mode)
+        chron_names_check = Checkbutton(self.root, text='Use chonological naming (extra scan for each source, must be uninterupted)', variable=self.want_chron)
         help_button = Button(self.root, text='Click here to see Help', command=self.show_help)
         help_button.pack()
         self.user_box.pack()
@@ -66,9 +67,6 @@ class SetupContainer:
         print("variable is", self.var.get())
 
     def show_help(self):
-        # todo tk box grab format is inconsistent
-        # todo give tk box a title
-        # todo get better names for buttons and check boxes. Will fix here later
         text = '''The Help Section (Also help.txt in directory)
 
 
@@ -79,14 +77,16 @@ How to 'just run it':
 4.Click start
 5.Check for a Users folder after console says to exit
 
+*saved accounts can be safely deleted by deleting their username folder, same with specific option folders.
+
 
 What each thing does/the extra options:
 Grab posts - save all visible posts a user has
 Grab smiled posts - allows you to save smiled content(check How to use Grab smiled posts below)
 Save all posts in folder - dumps all saved posts into a single folder
 save additional data per post - each post will get its own folder with saved comments, and some post data
-Fast Update Mode - shortens the initial scan time by stopping when it encounters previously saved posts
-Name files in chronological order - changes their default file name to one that can be sorted in order with the users feed
+Fast mode - shortens the initial scan time by stopping when it encounters previously saved posts. This may slow down the program if this is the first scan the user has
+Use chronological naming - changes their default file name to one that can be sorted in order with the users feed
 
 *both grab posts, and save posts check boxes are pairs meaning that at least one has to be checked, but both can be too
 
@@ -112,7 +112,6 @@ Can provide help if needed.
             with open('help.txt', 'w') as f:
                 f.write(text)
         os.system('notepad.exe help.txt')
-    # todo change 'check if human is needed' to check for human, y if login button is there...
 
     def post_options(self):
         if self.want_posts.get() == 1:
@@ -193,11 +192,11 @@ Can provide help if needed.
         raw_cookie = driver.get_cookie('UID')
         if raw_cookie is None:
             self.auth_label.config(text='Invalid Login')
-            given = input('check if human is needed(y to click again)>')
+            given = input('Human check(y to click login, n if already logged in)>')
             if given == 'y':
                 target.click()
                 time.sleep(1)
-                raw_cookie = driver.get_cookie('UID')
+            raw_cookie = driver.get_cookie('UID')
         driver.quit()
         print('raw', raw_cookie)
         with open(f'{self.user_box.get()}_key.txt', 'w') as f:
