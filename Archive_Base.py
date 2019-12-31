@@ -568,6 +568,8 @@ def save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, s
     for num_a, a in enumerate(new_post_data_links):
         print(f'Post Data: {num_a}/{len(new_post_data_links)} {a}')
         dir_name = a.split('/')[0]
+        if dir_name == '':
+            dir_name = a.split('/')[-1]
         if not os.path.isdir(dir_name):
             os.mkdir(dir_name)
         os.chdir(dir_name)
