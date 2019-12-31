@@ -47,6 +47,8 @@ class SetupContainer:
         save_posts_data_check = Checkbutton(self.root, text='Save additional data per post', variable=self.post_per_folder)
         fast_mode_check = Checkbutton(self.root, text='Fast Update Mode (may miss some posts, not for first scan)', variable=self.fast_mode)
         chron_names_check = Checkbutton(self.root, text='Name files in chronological order (extra scan for each, must be uninterupted)', variable=self.want_chron)
+        help_button = Button(self.root, text='Click here to see Help', command=self.show_help)
+        help_button.pack()
         self.user_box.pack()
         self.grab_posts_frame.pack()
         post_check.pack()
@@ -62,6 +64,55 @@ class SetupContainer:
 
     def cb(self, event=None):
         print("variable is", self.var.get())
+
+    def show_help(self):
+        # todo tk box grab format is inconsistent
+        # todo give tk box a title
+        # todo get better names for buttons and check boxes. Will fix here later
+        text = '''The Help Section (Also help.txt in directory)
+
+
+How to 'just run it':
+1.Put in username
+2.Check Grab posts
+3.Check Save all posts in folder
+4.Click start
+5.Check for a Users folder after console says to exit
+
+
+What each thing does/the extra options:
+Grab posts - save all visible posts a user has
+Grab smiled posts - allows you to save smiled content(check How to use Grab smiled posts below)
+Save all posts in folder - dumps all saved posts into a single folder
+save additional data per post - each post will get its own folder with saved comments, and some post data
+Fast Update Mode - shortens the initial scan time by stopping when it encounters previously saved posts
+Name files in chronological order - changes their default file name to one that can be sorted in order with the users feed
+
+*both grab posts, and save posts check boxes are pairs meaning that at least one has to be checked, but both can be too
+
+
+How to use Grab smiled posts:
+To be able to use this option, an ifunny login is required to be able to see the posts.
+1.Check box
+2.Click Test Authentication
+3.Enter email and password
+4.Wait ~15s for browser to do stuff. Don't touch it, it will close on its own.
+5.Return to setup window and continue what you were doing
+
+*If this has been done before and you haven't logged in since, the token should still work and you should be done at 2.
+*If console says 'check for human', there may be a human captcha or some other issue, type y if captcha was cleared, and n if already logged in
+
+
+Made by:
+Namisboss on ifunny
+it#4001 on discord
+Can provide help if needed.
+'''
+        if not os.path.isfile('help.txt'):
+            with open('help.txt', 'w') as f:
+                f.write(text)
+        os.system('notepad.exe help.txt')
+    # todo change 'check if human is needed' to check for human, y if login button is there...
 
     def post_options(self):
         if self.want_posts.get() == 1:
@@ -601,7 +652,6 @@ def main():
     print('Fill out form in new window')
     user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = setup()
     # user = 'Gone_With_The_Blastwave'
-    exit()
     start_time = time.time()
 
     if not os.path.isdir('Users'):
