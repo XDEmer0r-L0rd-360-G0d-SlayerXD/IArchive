@@ -13,7 +13,7 @@ def check_for_driver(browser):
     if not done:
         dl_link = ''
         if browser == 'firefox':
-            dl_link = 'https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-win32.zip'
+            dl_link = 'https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-win64.zip'
         else:
             dl_link = 'https://chromedriver.storage.googleapis.com/80.0.3987.16/chromedriver_win32.zip'
         with open('driver.zip', 'wb') as f:

