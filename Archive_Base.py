@@ -81,14 +81,17 @@ How to 'just run it':
 
 
 What each thing does/the extra options:
-Grab posts - save all visible posts a user has
-Grab smiled posts - allows you to save smiled content(check How to use Grab smiled posts below)
+Grab posts[1] - save all visible posts a user has
+Exclude repubs[3] - does as its name implies
+Grab smiled posts[1] - allows you to save smiled content(check How to use Grab smiled posts below)
 Save all posts in folder - dumps all saved posts into a single folder
 save additional data per post - each post will get its own folder with saved comments, and some post data
 Fast mode - shortens the initial scan time by stopping when it encounters previously saved posts. This may slow down the program if this is the first scan the user has
-Use chronological naming - changes their default file name to one that can be sorted in order with the users feed
+Use chronological naming[2] - changes their default file name to one that can be sorted in order with the users feed
 
-*both grab posts, and save posts check boxes are pairs meaning that at least one has to be checked, but both can be too
+[1]both grab posts, and save posts check boxes are pairs meaning that at least one has to be checked, but both can be too
+[2]while others should be safe, when using chronological naming, the entire download needs to be uninterupted because it saves posts out of order
+[3]due to conflicts, when using exclude repubs, both post folders need to empty, and when done will need to be removed if you desire to grab all again
 
 
 How to use Grab smiled posts:
@@ -96,7 +99,7 @@ To be able to use this option, an ifunny login is required to be able to see the
 1.Check box
 2.Click Test Authentication
 3.Enter email and password
-4.Wait ~15s for browser to do stuff. Don't touch it, it will close on its own.
+4.Wait ~15s for browser to do stuff. Don't touch it, it will close on its own. (chrome is untested, if there is an error you can find my info on bottom)
 5.Return to setup window and continue what you were doing
 
 *If this has been done before and you haven't logged in since, the token should still work and you should be done at 2.
@@ -299,6 +302,10 @@ def prep_user_files(user):
         with open('saved_smiles_data.txt', 'w') as f:
             f.write('')
     os.chdir('..')
+    if not os.path.isfile('errored.txt'):
+        with open('errored.txt', 'w') as f:
+            f.write('')
+
 
 
 def grab_post_urls(start_url, exclude_repubs=0, token='', short_scan=0, already_saved=set(), max_name_count=0):
@@ -367,7 +374,9 @@ def grab_archived():
     with open('saved_smiles_dump.txt', 'r') as f:
         smile_dump_links = set(f.read().split('\n'))
     os.chdir('..')
-    return post_data_links, post_dump_links, smile_data_links, smile_dump_links
+    with open('errored.txt', 'r') as f:
+        error_len = len(f.readlines())
+    return post_data_links, post_dump_links, smile_data_links, smile_dump_links, error_len
 
 
 def save_post(url_part, given_name=''):
@@ -493,27 +502,28 @@ def generate_post_info_file(url_part):
 
 def run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting):
     prep_user_files(user)
-    post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
+    # am now in correct user folder
+    post_data_links, post_dump_links, smile_data_links, smile_dump_links, errored_len = grab_archived()
     print('Starting scans')
     post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = set(), set(), set(), set(), set(), set()
-    post_data_len, post_dump_len, smile_data_len, smile_dump_len, post_len, smile_len = 0, 0, 0, 0, 0, 0
+    post_data_len, post_dump_len, smile_data_len, smile_dump_len, post_len, smile_len = [errored_len] * 6
     if chron_counting == 1:
         if want_posts == 1:
             if fast_mode == 0:
-                post_len = len(grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', 1))
+                post_len += len(grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', 1))
             else:
                 if want_data == 1:
-                    post_data_len = len(grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', 1, post_data_links))
+                    post_data_len += len(grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', 1, post_data_links))
                 if want_dump == 1:
-                    post_dump_len = len(grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', 1, post_dump_links))
+                    post_dump_len += len(grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', 1, post_dump_links))
         if want_smiles == 1:
             if fast_mode == 0:
-                smile_len = len(grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, 1))
+                smile_len += len(grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, 1))
             else:
                 if want_data == 1:
-                    smile_data_len = len(grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, 1, smile_data_links))
+                    smile_data_len += len(grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, 1, smile_data_links))
                 if want_dump == 1:
-                    smile_dump_len = len(grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, 1, smile_dump_links))
+                    smile_dump_len += len(grab_post_urls('https://ifunny.co/account/smiles', exclude_repubs, token, 1, smile_dump_links))
     if want_posts == 1:
         if fast_mode == 0:
             post_bank = grab_post_urls('https://ifunny.co/user/' + user, exclude_repubs, '', max_name_count=post_len)
@@ -660,7 +670,7 @@ def main():
     os.chdir('Users')
 
     post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data, smile_bank_dump = run_setup(user, want_posts, exclude_repubs, want_smiles, token, want_dump, want_data, fast_mode, chron_counting)
-    post_data_links, post_dump_links, smile_data_links, smile_dump_links = grab_archived()
+    post_data_links, post_dump_links, smile_data_links, smile_dump_links, errored_len = grab_archived()
     save_loop(want_dump, want_data, post_bank, post_bank_data, post_bank_dump, smile_bank, smile_bank_data,
               smile_bank_dump, post_data_links, post_dump_links, smile_data_links, smile_dump_links, chron_counting)
     winsound.Beep(700, 1000)
