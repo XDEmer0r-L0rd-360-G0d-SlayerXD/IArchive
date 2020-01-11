@@ -176,7 +176,7 @@ Can provide help if needed.
         page = session.get('https://ifunny.co/')
         print(page.status_code)
         print(session.cookies.get_dict())
-        if page.status_code != 200 or len(session.cookies.get_dict) == 0:
+        if page.status_code != 200 or len(session.cookies.get_dict()) == 0:
             input('Too many logins, wait 5 minutes and try again [enter to exit]')
             exit()
         raw_cookie = session.cookies.get_dict()['UID']
